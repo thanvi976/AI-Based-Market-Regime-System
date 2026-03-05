@@ -1,0 +1,17 @@
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000";
+
+export async function fetchMarketRisk() {
+  const response = await fetch(`${API_BASE}/market-risk`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch market risk: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchMarketData() {
+  const response = await fetch(`${API_BASE}/market-data`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch market data: ${response.status}`);
+  }
+  return response.json();
+}

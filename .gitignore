@@ -1,0 +1,14 @@
+# Node / Next.js
+node_modules
+.next
+
+# Python
+venv
+__pycache__
+*.pyc
+
+# Environment
+.env
+
+# Jupyter
+.ipynb_checkpoints
