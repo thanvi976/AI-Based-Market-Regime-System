@@ -14,9 +14,12 @@ router = APIRouter()
 def market_data():
     try:
         df = get_cached_data()
+
         if df is None or df.empty:
             raise HTTPException(status_code=503, detail="Market cache not ready")
+
         latest = df.tail(1).to_dict(orient="records")[0]
+
         return {
             "timestamp": latest.get("Datetime"),
             "updated_at": get_cached_timestamp(),
@@ -25,6 +28,7 @@ def market_data():
             "dow_jones_close": latest.get("dow_jones_close"),
             "vix_close": latest.get("vix_close"),
         }
+
     except HTTPException:
         raise
     except Exception as exc:
@@ -36,9 +40,12 @@ def market_data():
 def market_risk():
     try:
         df = get_cached_data()
+
         if df is None or df.empty:
             raise HTTPException(status_code=503, detail="Market cache not ready")
+
         result = generate_market_prediction(raw_data=df)
+
         return {
             "market_regime": result.market_regime,
             "crash_probability": result.crash_probability,
@@ -48,8 +55,36 @@ def market_risk():
             "momentum": result.momentum,
             "updated_at": get_cached_timestamp(),
         }
+
     except HTTPException:
         raise
     except Exception as exc:
         logger.exception("Failed to generate market risk")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/market-history")
+def market_history():
+    try:
+        df = get_cached_data()
+
+        if df is None or df.empty:
+            raise HTTPException(status_code=503, detail="Market cache not ready")
+
+        history = df.tail(30)
+
+        returns = history["sp500_close"].pct_change().fillna(0)
+        volatility = returns.abs()
+
+        return {
+            "dates": history["Datetime"].astype(str).tolist(),
+            "prices": history["sp500_close"].tolist(),
+            "volatility": volatility.tolist(),
+            "updated_at": get_cached_timestamp(),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to fetch market history")
         raise HTTPException(status_code=500, detail=str(exc)) from exc

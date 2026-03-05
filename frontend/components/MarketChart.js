@@ -44,11 +44,11 @@ export default function MarketChart({ priceSeries = [], volatilitySeries = [] })
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
       <div style={panel}>
-        <h3>Price Chart</h3>
+        <h3>S&P500 Trend (30 Days)</h3>
         <Line data={priceData} />
       </div>
       <div style={panel}>
-        <h3>Volatility Chart</h3>
+        <h3>Market Volatility Trend</h3>
         <Line data={volData} />
       </div>
     </div>

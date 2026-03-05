@@ -15,3 +15,11 @@ export async function fetchMarketData() {
   }
   return response.json();
 }
+
+export async function fetchMarketHistory() {
+  const response = await fetch(`${API_BASE}/market-history`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch market history: ${response.status}`);
+  }
+  return response.json();
+}
