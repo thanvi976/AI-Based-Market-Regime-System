@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from backend.app.services.market_cache import get_cached_data, get_cached_timestamp
 from backend.app.services.prediction_service import generate_market_prediction
+from backend.app.services.signal_engine import generate_signal
 from backend.app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -60,6 +61,38 @@ def market_risk():
         raise
     except Exception as exc:
         logger.exception("Failed to generate market risk")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/market-signal")
+def market_signal():
+    try:
+        df = get_cached_data()
+        if df is None or df.empty:
+            raise HTTPException(status_code=503, detail="Market cache not ready")
+        result = generate_market_prediction(raw_data=df)
+        signal_result = generate_signal(
+            crash_probability=result.crash_probability,
+            trend_strength=result.trend_strength,
+            momentum=result.momentum,
+            volatility=result.volatility,
+            risk_score=result.risk_score,
+            market_regime=result.market_regime,
+        )
+        return {
+            "signal": signal_result.signal,
+            "confidence": signal_result.confidence,
+            "explanation": signal_result.explanation,
+            "market_regime": result.market_regime,
+            "risk_score": result.risk_score,
+            "volatility": result.volatility,
+            "crash_probability": result.crash_probability,
+            "updated_at": get_cached_timestamp(),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to generate market signal")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 

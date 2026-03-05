@@ -39,3 +39,11 @@ export async function fetchIndiaHistory() {
   }
   return response.json();
 }
+
+export async function fetchMarketSignal() {
+  const response = await fetch(`${API_BASE}/market-signal`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch market signal: ${response.status}`);
+  }
+  return response.json();
+}

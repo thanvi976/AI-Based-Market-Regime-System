@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import MarketChart from "../components/MarketChart";
 import {
@@ -140,7 +141,10 @@ export default function DashboardPage() {
 
   return (
     <main style={wrap}>
-      <h1>Market Intelligence Dashboard</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+        <h1 style={{ margin: 0 }}>Market Intelligence Dashboard</h1>
+        <Link href="/signal" style={signalLink}>Market Signal →</Link>
+      </div>
       {error ? <p style={{ color: "#d32f2f" }}>{error}</p> : null}
       <section style={cardGrid}>
         <InsightCard
@@ -236,4 +240,11 @@ const analysisPanel = {
 const sectionTitle = {
   margin: "0 0 0.5rem",
   fontSize: "1.1rem",
+};
+
+const signalLink = {
+  color: "#1565c0",
+  textDecoration: "none",
+  fontWeight: 600,
+  fontSize: "0.95rem",
 };
