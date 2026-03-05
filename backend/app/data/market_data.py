@@ -36,6 +36,9 @@ def _build_fallback_market_data(interval: str) -> pd.DataFrame:
     dow_jones = prices * 7.8
     vix = np.clip(18 + rng.normal(0, 1.8, size=steps).cumsum() * 0.05, 12, 45)
     volumes = rng.integers(1_500_000, 6_500_000, size=steps)
+    nifty = prices * 0.24
+    sensex = prices * 0.08
+    india_vix_arr = np.clip(12 + rng.normal(0, 1.2, size=steps).cumsum() * 0.03, 10, 35)
 
     return pd.DataFrame(
         {
@@ -48,6 +51,12 @@ def _build_fallback_market_data(interval: str) -> pd.DataFrame:
             "dow_jones_volume": (volumes * 0.8).astype(int),
             "vix_close": vix,
             "vix_volume": (volumes * 0.5).astype(int),
+            "nifty_close": nifty,
+            "nifty_volume": (volumes * 0.5).astype(int),
+            "sensex_close": sensex,
+            "sensex_volume": (volumes * 0.4).astype(int),
+            "india_vix_close": india_vix_arr,
+            "india_vix_volume": (volumes * 0.2).astype(int),
         }
     )
 

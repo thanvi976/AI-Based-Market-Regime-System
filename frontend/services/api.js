@@ -23,3 +23,19 @@ export async function fetchMarketHistory() {
   }
   return response.json();
 }
+
+export async function fetchIndiaMarket() {
+  const response = await fetch(`${API_BASE}/india-market`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch India market: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function fetchIndiaHistory() {
+  const response = await fetch(`${API_BASE}/india-history`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch India history: ${response.status}`);
+  }
+  return response.json();
+}

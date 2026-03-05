@@ -88,3 +88,58 @@ def market_history():
     except Exception as exc:
         logger.exception("Failed to fetch market history")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/india-market")
+def india_market():
+    try:
+        df = get_cached_data()
+
+        if df is None or df.empty:
+            raise HTTPException(status_code=503, detail="Market cache not ready")
+
+        latest = df.tail(1).to_dict(orient="records")[0]
+
+        return {
+            "timestamp": latest.get("Datetime"),
+            "nifty_close": latest.get("nifty_close"),
+            "sensex_close": latest.get("sensex_close"),
+            "india_vix": latest.get("india_vix_close"),
+            "updated_at": get_cached_timestamp(),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to fetch India market data")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/india-history")
+def india_history():
+    try:
+        df = get_cached_data()
+
+        if df is None or df.empty:
+            raise HTTPException(status_code=503, detail="Market cache not ready")
+
+        history = df.tail(30)
+
+        def col_or_empty(name):
+            if name in history.columns:
+                return history[name].tolist()
+            return [0.0] * len(history)
+
+        return {
+            "dates": history["Datetime"].astype(str).tolist(),
+            "nifty_prices": col_or_empty("nifty_close"),
+            "sensex_prices": col_or_empty("sensex_close"),
+            "india_vix": col_or_empty("india_vix_close"),
+            "updated_at": get_cached_timestamp(),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to fetch India history")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

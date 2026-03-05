@@ -5,16 +5,17 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 MODEL_DIR = BASE_DIR / "models"
 DATASET_DIR = BASE_DIR / "dataset"
 
-# Major index proxies used for market signal aggregation.
+# Major index proxies used for market signal aggregation (US + India).
 MARKET_SYMBOLS = {
     "sp500": "SPY",
     "nasdaq": "QQQ",
     "dow_jones": "DIA",
     "vix": "VIXY",
+    "nifty": "^NSEI",
+    "sensex": "^BSESN",
+    "india_vix": "^INDIAVIX",
 }
-MARKET_FALLBACK_SYMBOLS = {
-    
-}
+MARKET_FALLBACK_SYMBOLS = {}
 
 DEFAULT_INTERVAL = "5m"
 DEFAULT_PERIOD = "5d"

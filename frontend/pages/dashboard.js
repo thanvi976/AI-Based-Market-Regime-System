@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import MarketChart from "../components/MarketChart";
-import { fetchMarketData, fetchMarketHistory, fetchMarketRisk } from "../services/api";
+import {
+  fetchIndiaHistory,
+  fetchIndiaMarket,
+  fetchMarketData,
+  fetchMarketHistory,
+  fetchMarketRisk,
+} from "../services/api";
 
 const REFRESH_MS = 5 * 60 * 1000;
 
@@ -22,6 +28,8 @@ export default function DashboardPage() {
   const [risk, setRisk] = useState(null);
   const [marketData, setMarketData] = useState(null);
   const [historyData, setHistoryData] = useState(null);
+  const [indiaData, setIndiaData] = useState(null);
+  const [indiaHistory, setIndiaHistory] = useState(null);
   const [error, setError] = useState("");
 
   const load = async () => {
@@ -31,12 +39,23 @@ export default function DashboardPage() {
       setRisk(riskResult);
       setMarketData(marketResult);
 
-      // Keep existing chart functionality by falling back if history endpoint is unavailable.
       try {
         const historyResult = await fetchMarketHistory();
         setHistoryData(historyResult);
       } catch {
         setHistoryData(null);
+      }
+
+      try {
+        const [indiaResult, indiaHistoryResult] = await Promise.all([
+          fetchIndiaMarket(),
+          fetchIndiaHistory(),
+        ]);
+        setIndiaData(indiaResult);
+        setIndiaHistory(indiaHistoryResult);
+      } catch {
+        setIndiaData(null);
+        setIndiaHistory(null);
       }
     } catch (err) {
       setError(err.message || "Failed to load data");
@@ -63,7 +82,7 @@ export default function DashboardPage() {
   const volatilitySeries = useMemo(() => {
     const dates = historyData?.dates;
     const vol = historyData?.volatility;
-  
+
     if (
       Array.isArray(dates) &&
       Array.isArray(vol) &&
@@ -77,9 +96,33 @@ export default function DashboardPage() {
         value: Number(vol[idx])
       }));
     }
-  
+
     return buildSeries(risk, "volatility", 0);
   }, [historyData, risk]);
+
+  const niftySeries = useMemo(() => {
+    const dates = indiaHistory?.dates;
+    const prices = indiaHistory?.nifty_prices;
+
+    if (!dates || !prices || dates.length !== prices.length) return [];
+
+    return dates.map((date, i) => ({
+      label: new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      value: Number(prices[i]),
+    }));
+  }, [indiaHistory]);
+
+  const indiaVixSeries = useMemo(() => {
+    const dates = indiaHistory?.dates;
+    const vix = indiaHistory?.india_vix;
+
+    if (!dates || !vix || dates.length !== vix.length) return [];
+
+    return dates.map((date, i) => ({
+      label: new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      value: Number(vix[i]),
+    }));
+  }, [indiaHistory]);
 
   const volatilityValue = Number(risk?.volatility || 0);
   const volatilityLabel =
@@ -122,8 +165,18 @@ export default function DashboardPage() {
         <h2 style={sectionTitle}>Market Analysis</h2>
         <p style={{ margin: 0, color: "#374151", lineHeight: 1.6 }}>{marketAnalysis}</p>
       </section>
-      <section style={{ marginTop: "1rem" }}>
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2 style={sectionTitle}>US Market</h2>
         <MarketChart priceSeries={priceSeries} volatilitySeries={volatilitySeries} />
+      </section>
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2 style={sectionTitle}>Indian Market</h2>
+        <MarketChart
+          priceChartTitle="NIFTY 50 Trend"
+          volChartTitle="India VIX"
+          priceSeries={niftySeries}
+          volatilitySeries={indiaVixSeries}
+        />
       </section>
     </main>
   );
