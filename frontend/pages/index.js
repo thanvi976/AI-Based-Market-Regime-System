@@ -12,6 +12,9 @@ export default function HomePage() {
         <Link href="/dashboard" style={buttonStyleSecondary}>
           Open Dashboard
         </Link>
+        <Link href="/trading-assistant" style={buttonStyleSecondary}>
+          AI Trading Assistant
+        </Link>
       </div>
     </main>
   );

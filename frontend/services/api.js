@@ -47,3 +47,16 @@ export async function fetchMarketSignal() {
   }
   return response.json();
 }
+
+export async function askTradingAssistant(question) {
+  const response = await fetch(`${API_BASE}/ai/trading-assistant`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question: question.trim() }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Request failed: ${response.status}`);
+  }
+  return response.json();
+}
