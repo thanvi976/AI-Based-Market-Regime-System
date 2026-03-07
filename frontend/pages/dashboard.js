@@ -104,13 +104,16 @@ export default function DashboardPage() {
   const niftySeries = useMemo(() => {
     const dates = indiaHistory?.dates;
     const prices = indiaHistory?.nifty_prices;
-
+  
     if (!dates || !prices || dates.length !== prices.length) return [];
-
+  
     return dates.map((date, i) => ({
-      label: new Date(date).toLocaleDateString([], { 
-        month: "short", 
-        day: "numeric" 
+      label: new Date(date).toLocaleString([], { 
+        month: "short",
+        day: "numeric",
+        hour: "2-digit", 
+        minute: "2-digit",
+        timeZone: "Asia/Kolkata"
       }),
       value: Number(prices[i]),
     }));

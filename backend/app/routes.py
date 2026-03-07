@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
-
+import pandas as pd 
 from backend.app.services.market_cache import get_cached_data, get_cached_timestamp
 from backend.app.services.prediction_service import generate_market_prediction
 from backend.app.services.signal_engine import generate_signal
@@ -100,27 +100,27 @@ def market_signal():
 def market_history():
     try:
         df = get_cached_data()
-
         if df is None or df.empty:
             raise HTTPException(status_code=503, detail="Market cache not ready")
 
-        history = df.tail(30)
-
-        returns = history["sp500_close"].pct_change().fillna(0)
+        # Only real US trading rows (where sp500 actually moved)
+        us_df = df[df["sp500_close"].diff().fillna(1) != 0].tail(30)
+        returns = us_df["sp500_close"].pct_change().fillna(0)
         volatility = returns.abs()
 
         return {
-            "dates": history["Datetime"].astype(str).tolist(),
-            "prices": history["sp500_close"].tolist(),
+            "dates": us_df["Datetime"].astype(str).tolist(),
+            "prices": us_df["sp500_close"].tolist(),
             "volatility": volatility.tolist(),
             "updated_at": get_cached_timestamp(),
         }
-
     except HTTPException:
         raise
     except Exception as exc:
         logger.exception("Failed to fetch market history")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 
 
 @router.get("/india-market")
@@ -152,25 +152,29 @@ def india_market():
 def india_history():
     try:
         df = get_cached_data()
-
         if df is None or df.empty:
             raise HTTPException(status_code=503, detail="Market cache not ready")
 
-        history = df.tail(30)
+        # Get ALL real Indian trading rows (not just tail 30)
+        india_df = df[df["nifty_close"].diff().fillna(1) != 0]
+
+        # Convert UTC → IST for display
+        ist_dates = (
+            pd.to_datetime(india_df["Datetime"]) + pd.Timedelta(hours=5, minutes=30)
+        ).dt.strftime("%d %b, %I:%M %p").tolist()
 
         def col_or_empty(name):
-            if name in history.columns:
-                return history[name].tolist()
-            return [0.0] * len(history)
+            if name in india_df.columns:
+                return india_df[name].tolist()
+            return [0.0] * len(india_df)
 
         return {
-            "dates": history["Datetime"].astype(str).tolist(),
+            "dates": ist_dates,
             "nifty_prices": col_or_empty("nifty_close"),
             "sensex_prices": col_or_empty("sensex_close"),
             "india_vix": col_or_empty("india_vix_close"),
             "updated_at": get_cached_timestamp(),
         }
-
     except HTTPException:
         raise
     except Exception as exc:

@@ -20,6 +20,23 @@ def _interval_to_delta(interval: str) -> timedelta:
     return timedelta(days=1)
 
 
+def _normalize_datetime_col(series: pd.Series, freq: str) -> pd.Series:
+    """Convert any datetime series to UTC, strip tz, then floor to interval freq."""
+    s = pd.to_datetime(series)
+    if s.dt.tz is not None:
+        s = s.dt.tz_convert("UTC").dt.tz_localize(None)
+    return s.dt.floor(freq)
+
+
+def _interval_to_freq(interval: str) -> str:
+    """Map yfinance interval string to a pandas floor freq string."""
+    if interval.endswith("m"):
+        return f"{interval[:-1]}min"
+    if interval.endswith("h"):
+        return f"{interval[:-1]}h"
+    return "D"
+
+
 def _build_fallback_market_data(interval: str) -> pd.DataFrame:
     # Offline-safe synthetic market stream to keep API responsive when upstream data fails.
     steps = 320
@@ -75,23 +92,46 @@ def get_live_market_data(
         logger.warning("Required symbols unavailable; using synthetic fallback data")
         return _build_fallback_market_data(interval=interval)
 
+    freq = _interval_to_freq(interval)
     merged: pd.DataFrame | None = None
+
     for alias, frame in symbol_frames.items():
         if frame.empty:
             logger.warning("Skipping empty frame for alias %s", alias)
             continue
+
         local = frame[["Datetime", "Close", "Volume"]].copy()
+
+        # ── KEY FIX: normalize all timestamps to UTC-naive floored to interval ──
+        # Different symbols return timestamps with different timezones (or none).
+        # An inner merge on raw Datetime finds zero matches → empty merged → fallback.
+        local["Datetime"] = _normalize_datetime_col(local["Datetime"], freq)
+
+        # Drop duplicate timestamps that can appear after flooring
+        local = local.drop_duplicates(subset="Datetime")
+
         local = local.rename(
             columns={
                 "Close": f"{alias}_close",
                 "Volume": f"{alias}_volume",
             }
         )
-        merged = local if merged is None else merged.merge(local, on="Datetime", how="inner")
+
+        if merged is None:
+            merged = local
+        else:
+            # outer join keeps all timestamps even when markets don't overlap
+            # (e.g. US hours vs Indian hours never share the same UTC timestamp)
+            merged = merged.merge(local, on="Datetime", how="outer")
+            logger.debug("Merged %s — rows so far: %s", alias, len(merged))
 
     if merged is None or merged.empty:
         logger.warning("Could not merge market data; using synthetic fallback data")
         return _build_fallback_market_data(interval=interval)
 
     merged = merged.sort_values("Datetime").reset_index(drop=True)
+    # Forward-fill then back-fill NaNs from the outer join
+    # (gaps where one market was closed while the other was open)
+    merged = merged.ffill().bfill()
+    logger.info("Live market data merged successfully — %s rows, %s symbols", len(merged), len(symbol_frames))
     return merged
