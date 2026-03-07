@@ -65,6 +65,7 @@ def run_trading_assistant(question: str) -> dict:
             computed_signal = compute_signal(cp, ma20, momentum_5d)
             stock_data_dict = {
                 "display_name": stock_label,
+                "symbol": ticker,
                 "current_price": round(cp, 2) if cp is not None else None,
                 "momentum_5d": momentum_5d,
                 "ma20": ma20,

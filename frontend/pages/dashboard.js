@@ -108,7 +108,10 @@ export default function DashboardPage() {
     if (!dates || !prices || dates.length !== prices.length) return [];
 
     return dates.map((date, i) => ({
-      label: new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      label: new Date(date).toLocaleDateString([], { 
+        month: "short", 
+        day: "numeric" 
+      }),
       value: Number(prices[i]),
     }));
   }, [indiaHistory]);
@@ -120,11 +123,14 @@ export default function DashboardPage() {
     if (!dates || !vix || dates.length !== vix.length) return [];
 
     return dates.map((date, i) => ({
-      label: new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      label: new Date(date).toLocaleDateString([], { 
+        month: "short", 
+        day: "numeric" 
+      }),
       value: Number(vix[i]),
     }));
   }, [indiaHistory]);
-
+  
   const volatilityValue = Number(risk?.volatility || 0);
   const volatilityLabel =
     volatilityValue < 0.003 ? "Low" : volatilityValue < 0.01 ? "Medium" : "High";
