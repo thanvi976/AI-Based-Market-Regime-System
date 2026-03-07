@@ -12,6 +12,17 @@ class TradingAssistantRequest(BaseModel):
     question: str
 
 
+def compute_signal(price: float | None, ma20: float | None, momentum: float | None) -> str:
+    """Compute BUY/HOLD/SELL from price, MA20, and 5d momentum. Returns HOLD if any input is missing."""
+    if price is None or ma20 is None or momentum is None:
+        return "HOLD"
+    if price > ma20 and momentum > 0:
+        return "BUY"
+    if price < ma20 and momentum < 0:
+        return "SELL"
+    return "HOLD"
+
+
 def get_market_data_for_assistant() -> dict:
     """Fetch current market prediction data for the assistant context."""
     from backend.app.services.market_cache import get_cached_data
@@ -40,19 +51,30 @@ def run_trading_assistant(question: str) -> dict:
     display_name, ticker = detect_stock_from_question(question)
     stock_data_dict = None
     price = None
+    currency = None
     stock_label = display_name or "N/A"
 
     if ticker:
         stock_info = get_stock_data(ticker)
         if stock_info:
+            cp = stock_info.get("current_price")
+            ma20 = stock_info.get("ma20")
+            momentum_5d = stock_info.get("momentum_5d")
+            market = "Indian Market" if (ticker.endswith(".NS") or ticker.endswith(".BO")) else "US Market"
+            currency = stock_info.get("currency", "INR")
+            computed_signal = compute_signal(cp, ma20, momentum_5d)
             stock_data_dict = {
                 "display_name": stock_label,
-                "current_price": round(stock_info.current_price, 2),
-                "momentum": stock_info.momentum,
-                "volume": stock_info.volume,
-                "currency": stock_info.currency,
+                "current_price": round(cp, 2) if cp is not None else None,
+                "momentum_5d": momentum_5d,
+                "ma20": ma20,
+                "volume": stock_info.get("volume"),
+                "volume_trend": stock_info.get("volume_trend"),
+                "currency": currency,
+                "market": market,
+                "signal": computed_signal,
             }
-            price = stock_info.current_price
+            price = cp
 
     market_data = get_market_data_for_assistant()
     analysis = ask_trading_ai(question=question, stock_data=stock_data_dict, market_data=market_data)
@@ -60,6 +82,7 @@ def run_trading_assistant(question: str) -> dict:
     return {
         "stock": stock_label,
         "price": price,
+        "currency": currency,
         "analysis": analysis,
     }
 

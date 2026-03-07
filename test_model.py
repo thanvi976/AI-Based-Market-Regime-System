@@ -124,7 +124,7 @@ else:
     y_prob = proba[:, 0]
 
 # Crash probability threshold
-threshold = 0.25
+threshold = 0.15
 print("\nUsing crash probability threshold:", threshold)
 
 y_pred = (y_prob >= threshold).astype(int)

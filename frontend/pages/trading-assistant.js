@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { askTradingAssistant } from "../services/api";
-
+import ReactMarkdown from "react-markdown";
 export default function TradingAssistantPage() {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
@@ -60,11 +60,11 @@ export default function TradingAssistantPage() {
           <p style={meta}>
             Stock: <strong>{result.stock}</strong>
             {result.price != null && (
-              <> · Price: <strong>₹{Number(result.price).toLocaleString()}</strong></>
+              <> · Price: <strong>{result.currency === "USD" ? "$" : "₹"}{Number(result.price).toLocaleString()}</strong></>
             )}
           </p>
           <div style={analysisBox}>
-            {result.analysis}
+            <ReactMarkdown>{result.analysis}</ReactMarkdown>
           </div>
         </section>
       )}
@@ -117,7 +117,6 @@ const resultCard = {
 const sectionTitle = { margin: "0 0 0.75rem", fontSize: "1.1rem" };
 const meta = { margin: "0 0 1rem", fontSize: "0.95rem", color: "#4b5563" };
 const analysisBox = {
-  whiteSpace: "pre-wrap",
   lineHeight: 1.6,
   color: "#374151",
 };

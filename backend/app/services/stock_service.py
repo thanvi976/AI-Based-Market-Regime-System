@@ -1,9 +1,9 @@
-"""Fetch real-time stock data using yfinance (price, momentum, volume)."""
+"""Fetch stock data and compute stock-specific indicators using yfinance."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
+import time
+from typing import Any
 
 import yfinance as yf
 
@@ -11,102 +11,111 @@ from backend.app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-
-@dataclass
-class StockData:
-    current_price: float
-    momentum: float
-    volume: int | None = None
-    currency: str = "INR"
-    last_updated: str | None = None
+RETRY_DELAY_SECONDS = 2
 
 
-def get_stock_data(symbol: str) -> StockData | None:
+def _currency(symbol: str) -> str:
+    return "INR" if symbol.endswith(".NS") or symbol.endswith(".BO") else "USD"
+
+
+def _fallback(symbol: str) -> dict[str, Any]:
+    """Safe fallback when Yahoo returns no data or an error."""
+    return {
+        "display_name": symbol,
+        "current_price": None,
+        "momentum_5d": None,
+        "ma20": None,
+        "volume": None,
+        "volume_trend": None,
+        "currency": _currency(symbol),
+    }
+
+
+def _from_history(hist, symbol: str) -> dict[str, Any]:
+    """Compute stock indicators from 1mo daily history. Never raises."""
+    try:
+        if hist is None or hist.empty or len(hist) < 1:
+            return _fallback(symbol)
+
+        data = hist
+        close = data["Close"]
+        latest = data.iloc[-1]
+        current_price = float(latest["Close"])
+
+        # 5-day return (need at least 6 rows: current + 5 back)
+        momentum_5d = None
+        if len(data) >= 6:
+            close_5_ago = float(data.iloc[-5]["Close"])
+            if close_5_ago and close_5_ago != 0:
+                momentum_5d = round((current_price - close_5_ago) / close_5_ago, 6)
+
+        # 20-day moving average (use available rows if < 20)
+        ma20 = None
+        rolling = close.rolling(20, min_periods=1).mean()
+        if len(rolling) > 0 and not (rolling.isna().all()):
+            ma20 = float(rolling.iloc[-1])
+
+        # Volume and volume trend: latest volume > mean volume = increasing
+        volume = None
+        volume_trend = None
+        if "Volume" in data.columns:
+            vol_series = data["Volume"].dropna()
+            if len(vol_series) > 0:
+                try:
+                    volume = float(vol_series.iloc[-1])
+                except (TypeError, ValueError):
+                    volume = None
+                vol_mean = float(vol_series.mean())
+                if volume is not None and vol_mean > 0:
+                    volume_trend = volume > vol_mean
+
+        return {
+            "display_name": symbol,
+            "current_price": current_price,
+            "momentum_5d": momentum_5d,
+            "ma20": ma20,
+            "volume": volume,
+            "volume_trend": volume_trend,
+            "currency": _currency(symbol),
+        }
+    except Exception as exc:
+        logger.error("Error parsing history for %s: %s", symbol, exc)
+        return _fallback(symbol)
+
+
+def get_stock_data(symbol: str) -> dict[str, Any] | None:
     """
-    Fetch 1-minute interval data for the current trading day and derive
-    current price, recent momentum, and volume. Falls back to 1d data if
-    1m is unavailable (e.g. outside market hours or no intraday data).
+    Fetch 1-month daily history and compute stock indicators.
+    Uses only ticker.history(); retries once if empty; returns safe fallback on failure.
+    Never raises.
     """
-    if not symbol or not symbol.strip():
+    if not symbol or not isinstance(symbol, str):
         return None
 
     symbol = symbol.strip().upper()
-    try:
-        ticker = yf.Ticker(symbol)
-        # Prefer 1m for "current trading day"; yfinance allows 1m for last 7 days
-        hist_1m = ticker.history(period="1d", interval="1m", auto_adjust=True)
-        if hist_1m is not None and not hist_1m.empty:
-            return _from_intraday(hist_1m, symbol)
-        # Fallback: 1d or 5d daily data
-        hist_1d = ticker.history(period="5d", interval="1d", auto_adjust=True)
-        if hist_1d is not None and not hist_1d.empty:
-            return _from_daily(hist_1d, symbol)
-        # Last resort: info for current/last price
-        info = ticker.info
-        price = _safe_float(info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose"))
-        if price is None:
-            logger.warning("No price data for symbol %s", symbol)
+
+    def _fetch() -> dict[str, Any] | None:
+        try:
+            ticker = yf.Ticker(symbol)
+            hist = ticker.history(period="1mo", interval="1d", auto_adjust=True)
+            if hist is not None and not hist.empty and len(hist) > 0:
+                return _from_history(hist, symbol)
             return None
-        return StockData(
-            current_price=price,
-            momentum=0.0,
-            volume=_safe_int(info.get("volume") or info.get("regularMarketVolume")),
-            currency=info.get("currency", "INR"),
-            last_updated=datetime.now(timezone.utc).isoformat(),
-        )
+        except Exception as exc:
+            logger.error("yfinance call failed for %s: %s", symbol, exc)
+            return None
+
+    try:
+        result = _fetch()
+        if result is not None:
+            return result
+        logger.warning("Yahoo returned no history for %s; retrying after %ss", symbol, RETRY_DELAY_SECONDS)
+        time.sleep(RETRY_DELAY_SECONDS)
+        result = _fetch()
+        if result is not None:
+            return result
+        logger.warning("No data for %s after retry; returning fallback", symbol)
+        return _fallback(symbol)
     except Exception as exc:
-        logger.exception("get_stock_data failed for %s: %s", symbol, exc)
-        return None
-
-
-def _from_intraday(hist, symbol: str) -> StockData:
-    close = hist["Close"]
-    current_price = float(close.iloc[-1])
-    volume = int(hist["Volume"].iloc[-1]) if "Volume" in hist.columns else None
-    # Momentum: % change over last 5 candles if available, else last 2
-    n = min(5, len(close) - 1)
-    if n > 0:
-        momentum = (current_price - float(close.iloc[-1 - n])) / float(close.iloc[-1 - n])
-    else:
-        momentum = 0.0
-    return StockData(
-        current_price=current_price,
-        momentum=round(momentum, 6),
-        volume=volume,
-        last_updated=close.index[-1].isoformat() if hasattr(close.index[-1], "isoformat") else str(close.index[-1]),
-    )
-
-
-def _from_daily(hist, symbol: str) -> StockData:
-    close = hist["Close"]
-    current_price = float(close.iloc[-1])
-    volume = int(hist["Volume"].iloc[-1]) if "Volume" in hist.columns else None
-    # Momentum: 1-day % change
-    if len(close) >= 2:
-        momentum = (current_price - float(close.iloc[-2])) / float(close.iloc[-2])
-    else:
-        momentum = 0.0
-    return StockData(
-        current_price=current_price,
-        momentum=round(momentum, 6),
-        volume=volume,
-        last_updated=close.index[-1].isoformat() if hasattr(close.index[-1], "isoformat") else str(close.index[-1]),
-    )
-
-
-def _safe_float(value) -> float | None:
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def _safe_int(value) -> int | None:
-    if value is None:
-        return None
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
+        logger.error("get_stock_data failed for %s: %s", symbol, exc)
+        return _fallback(symbol)
