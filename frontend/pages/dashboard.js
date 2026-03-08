@@ -170,7 +170,10 @@ export default function DashboardPage() {
   const crashPercent = Math.round(Number(risk?.crash_probability || 0) * 100);
   const volatilityLabel = crashPercent >= 40 ? "High" : crashPercent >= 20 ? "Medium" : "Low";
   const regime = risk?.market_regime || "Neutral";
-  const regimeColor = regime.includes("Bull") ? "#2e7d32" : regime.includes("Bear") ? "#c62828" : "#f9a825";
+  const regimeColor = regime.includes("Bull") ? "var(--forest)" : regime.includes("Bear") ? "var(--rose)" : "var(--camel)";
+  const crashColor = crashPercent >= 40 ? "var(--rose)" : crashPercent >= 20 ? "var(--camel)" : "var(--forest)";
+  const riskScoreNum = Number(risk?.risk_score ?? 0) / 10;
+  const riskScoreColor = riskScoreNum <= 3 ? "var(--forest)" : riskScoreNum <= 6 ? "var(--camel)" : "var(--rose)";
   const riskScoreTen = (Number(risk?.risk_score || 0) / 10).toFixed(1);
   const marketAnalysis = `The market is currently in a ${regime} regime with ${volatilityLabel.toLowerCase()} volatility and a risk score of ${riskScoreTen}/10. Crash probability is currently ${crashPercent}%, indicating ${crashPercent < 20 ? "stable" : crashPercent < 50 ? "moderately risky" : "high-risk"} market conditions.`;
 
@@ -178,198 +181,225 @@ export default function DashboardPage() {
   const indiaCrashPercent = Math.round(Number(indiaRisk?.crash_probability || 0) * 100);
   const indiaVolatilityLabel = indiaCrashPercent >= 40 ? "High" : indiaCrashPercent >= 20 ? "Medium" : "Low";
   const indiaRegime = indiaRisk?.market_regime || "Neutral";
-  const indiaRegimeColor = indiaRegime.includes("Bull") ? "#2e7d32" : indiaRegime.includes("Bear") ? "#c62828" : "#f9a825";
+  const indiaRegimeColor = indiaRegime.includes("Bull") ? "var(--forest)" : indiaRegime.includes("Bear") ? "var(--rose)" : "var(--camel)";
+  const indiaCrashColor = indiaCrashPercent >= 40 ? "var(--rose)" : indiaCrashPercent >= 20 ? "var(--camel)" : "var(--forest)";
+  const indiaRiskScoreNum = Number(indiaRisk?.risk_score ?? 0) / 10;
+  const indiaRiskScoreColor = indiaRiskScoreNum <= 3 ? "var(--forest)" : indiaRiskScoreNum <= 6 ? "var(--camel)" : "var(--rose)";
   const indiaRiskScoreTen = (Number(indiaRisk?.risk_score || 0) / 10).toFixed(1);
   const indiaAnalysis = `The Indian market is currently in a ${indiaRegime} regime with ${indiaVolatilityLabel.toLowerCase()} volatility and a risk score of ${indiaRiskScoreTen}/10. Crash probability is currently ${indiaCrashPercent}%, indicating ${indiaCrashPercent < 20 ? "stable" : indiaCrashPercent < 50 ? "moderately risky" : "high-risk"} market conditions.`;
+  const volColor = volatilityLabel === "High" ? "var(--rose)" : volatilityLabel === "Medium" ? "var(--camel)" : "var(--forest)";
+  const indiaVolColor = indiaVolatilityLabel === "High" ? "var(--rose)" : indiaVolatilityLabel === "Medium" ? "var(--camel)" : "var(--forest)";
 
   return (
-    <main style={wrap}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-        <h1 style={{ margin: 0 }}>Market Intelligence Dashboard</h1>
-        <Link href="/signal" style={signalLink}>Market Signal →</Link>
-      </div>
-
-      {error ? <p style={{ color: "#d32f2f" }}>{error}</p> : null}
-
-      {/* ── US Market Risk ── */}
-      <section style={riskSection}>
-        <div style={riskSectionHeader}>
-          <span style={marketFlag}>🇺🇸</span>
-          <h2 style={marketTitle}>US Market Risk</h2>
+    <>
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 100,
+        background: "white", borderBottom: "1px solid var(--border)",
+        height: "56px", display: "flex", alignItems: "center",
+        justifyContent: "space-between", padding: "0 1.5rem",
+      }}>
+        <Link href="/" style={{ fontFamily: "Playfair Display, serif", fontSize: "1.1rem", fontWeight: 700, textDecoration: "none", color: "var(--ink)" }}>
+          KAIROS <span style={{ color: "var(--gold)", margin: "0 0.25rem" }}>·</span> Markets
+        </Link>
+        <div style={{ display: "flex", gap: "1.5rem" }}>
+          
+          <Link href="/trading-assistant" style={{ fontSize: "0.875rem", color: "var(--ink-muted)", textDecoration: "none" }}>Assistant</Link>
         </div>
-        <section style={cardGrid}>
-          <InsightCard title="Market Regime" value={regime} valueColor={regimeColor} />
-          <InsightCard title="Crash Probability" value={`${crashPercent}%`} />
-          <InsightCard title="Risk Score" value={`${riskScoreTen} / 10`} />
-          <InsightCard title="Volatility" value={volatilityLabel} />
-        </section>
-        <section style={analysisPanel}>
-          <h2 style={sectionTitle}>Market Analysis</h2>
-          <p style={{ margin: 0, color: "#374151", lineHeight: 1.6 }}>{marketAnalysis}</p>
-        </section>
-      </section>
+      </nav>
 
-      {/* ── India Market Risk ── */}
-      <section style={riskSection}>
-        <div style={riskSectionHeader}>
-          <span style={marketFlag}>🇮🇳</span>
-          <h2 style={marketTitle}>India Market Risk</h2>
+      <main className="page-wrap" style={{ background: "var(--bg)", minHeight: "100vh", padding: "2rem 1.5rem 4rem", maxWidth: "1280px", margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+          <h1 style={{ margin: 0, fontFamily: "Playfair Display, serif", fontSize: "1.5rem", color: "var(--ink)" }}>Market Intelligence Dashboard</h1>
+          <Link href="/signal" style={{ color: "var(--gold)", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem" }}>Market Signal →</Link>
         </div>
-        <section style={cardGrid}>
-          <InsightCard title="Market Regime" value={indiaRegime} valueColor={indiaRegimeColor} />
-          <InsightCard title="Crash Probability" value={`${indiaCrashPercent}%`} />
-          <InsightCard title="Risk Score" value={`${indiaRiskScoreTen} / 10`} />
-          <InsightCard title="Volatility" value={indiaVolatilityLabel} />
-        </section>
-        <section style={analysisPanel}>
-          <h2 style={sectionTitle}>Market Analysis</h2>
-          <p style={{ margin: 0, color: "#374151", lineHeight: 1.6 }}>{indiaAnalysis}</p>
-        </section>
-      </section>
 
-      {/* ── US Market Charts ── */}
-      <section style={marketSection}>
-        <div style={marketSectionHeader}>
-          <span style={marketFlag}>🇺🇸</span>
-          <h2 style={marketTitle}>US Market</h2>
-        </div>
-        <div style={chartGrid}>
-          <div style={chartBox}>
-            <p style={chartLabel}>Intraday (5 min)</p>
-            <MarketChart
-              priceChartTitle="S&P 500 Trend"
-              volChartTitle="Market Volatility"
-              priceSeries={priceSeries}
-              volatilitySeries={volatilitySeries}
-            />
+        {error ? <p style={{ color: "var(--rose)", marginBottom: "1rem" }}>{error}</p> : null}
+
+        
+
+        
+
+        {/* ── US Market Risk ── */}
+        <section style={{ marginBottom: "2rem", background: "white", border: "1px solid var(--border)", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+            <span style={{
+              width: "32px", height: "32px", background: "var(--navy)", color: "white",
+              borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "0.65rem", fontWeight: 700, fontFamily: "DM Sans, sans-serif", letterSpacing: "0.05em",
+            }}>US</span>
+            <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)" }}>
+              US Market Risk
+            </h2>
+            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
           </div>
-          <div style={chartBox}>
-            <p style={chartLabel}>Last 30 Days</p>
-            <MarketChart
-              priceChartTitle="S&P 500 (30-Day)"
-              volChartTitle="VIX (30-Day)"
-              priceSeries={sp500DailySeries}
-              volatilitySeries={vixDailySeries}
-            />
+          <div className="metric-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
+            <InsightCard label="Market Regime" value={regime} valueColor={regimeColor} accentColor={regimeColor} />
+            <InsightCard label="Crash Probability" value={`${crashPercent}%`} valueColor={crashColor} accentColor={crashColor} />
+            <InsightCard label="Risk Score" value={`${riskScoreTen} / 10`} valueColor={riskScoreColor} accentColor={riskScoreColor} riskScore={riskScoreNum} />
+            <InsightCard label="Volatility" value={volatilityLabel} valueColor={volColor} accentColor={volColor} />
           </div>
-        </div>
-      </section>
+          <div style={{
+            background: "white", border: "1px solid var(--border)", borderRadius: "12px",
+            padding: "1.1rem 1.25rem", borderLeft: "3px solid var(--gold)",
+          }}>
+            <p style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--gold)", fontWeight: 500, marginBottom: "0.4rem", fontFamily: "DM Sans, sans-serif" }}>
+              Market Analysis
+            </p>
+            <p style={{ fontSize: "0.95rem", color: "var(--ink-muted)", lineHeight: 1.7, margin: 0 }}>{marketAnalysis}</p>
+          </div>
+        </section>
 
-      {/* ── Indian Market Charts ── */}
-      <section style={marketSection}>
-        <div style={marketSectionHeader}>
-          <span style={marketFlag}>🇮🇳</span>
-          <h2 style={marketTitle}>Indian Market</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", margin: "2rem 0" }}>
+          <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+          <span style={{ fontSize: "0.72rem", letterSpacing: "0.15em", color: "var(--ink-muted)", textTransform: "uppercase", fontFamily: "DM Sans, sans-serif", fontWeight: 500 }}>
+            Indian Market
+          </span>
+          <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
         </div>
-        <div style={chartGrid}>
-          <div style={chartBox}>
-            <p style={chartLabel}>Intraday (5 min, IST)</p>
-            <MarketChart
-              priceChartTitle="NIFTY 50 Trend"
-              volChartTitle="India VIX"
-              priceSeries={niftySeries}
-              volatilitySeries={indiaVixSeries}
-            />
+
+        {/* ── India Market Risk ── */}
+        <section style={{ marginBottom: "2rem", background: "white", border: "1px solid var(--border)", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+            <span style={{
+              width: "32px", height: "32px", background: "var(--navy)", color: "white",
+              borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "0.65rem", fontWeight: 700, fontFamily: "DM Sans, sans-serif", letterSpacing: "0.05em",
+            }}>IN</span>
+            <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)" }}>
+              Indian Market Risk
+            </h2>
+            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
           </div>
-          <div style={chartBox}>
-            <p style={chartLabel}>Last 30 Days</p>
-            <MarketChart
-              priceChartTitle="NIFTY 50 (30-Day)"
-              volChartTitle="India VIX (30-Day)"
-              priceSeries={niftyDailySeries}
-              volatilitySeries={indiaVixDailySeries}
-            />
+          <div className="metric-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
+            <InsightCard label="Market Regime" value={indiaRegime} valueColor={indiaRegimeColor} accentColor={indiaRegimeColor} />
+            <InsightCard label="Crash Probability" value={`${indiaCrashPercent}%`} valueColor={indiaCrashColor} accentColor={indiaCrashColor} />
+            <InsightCard label="Risk Score" value={`${indiaRiskScoreTen} / 10`} valueColor={indiaRiskScoreColor} accentColor={indiaRiskScoreColor} riskScore={indiaRiskScoreNum} />
+            <InsightCard label="Volatility" value={indiaVolatilityLabel} valueColor={indiaVolColor} accentColor={indiaVolColor} />
           </div>
-        </div>
-      </section>
-    </main>
+          <div style={{
+            background: "white", border: "1px solid var(--border)", borderRadius: "12px",
+            padding: "1.1rem 1.25rem", borderLeft: "3px solid var(--gold)",
+          }}>
+            <p style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--gold)", fontWeight: 500, marginBottom: "0.4rem", fontFamily: "DM Sans, sans-serif" }}>
+              Market Analysis
+            </p>
+            <p style={{ fontSize: "0.95rem", color: "var(--ink-muted)", lineHeight: 1.7, margin: 0 }}>{indiaAnalysis}</p>
+          </div>
+        </section>
+
+        {/* ── US Market Charts ── */}
+        <section style={{ marginBottom: "2rem", background: "white", border: "1px solid var(--border)", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+            <span style={{
+              width: "32px", height: "32px", background: "var(--navy)", color: "white",
+              borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "0.65rem", fontWeight: 700, fontFamily: "DM Sans, sans-serif", letterSpacing: "0.05em",
+            }}>US</span>
+            <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)" }}>
+              US Market
+            </h2>
+            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+          </div>
+          <div className="chart-pair" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(480px, 1fr))", gap: "1.5rem" }}>
+            <div>
+              <p style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-muted)", fontWeight: 500, marginBottom: "0.5rem", fontFamily: "DM Sans, sans-serif" }}>
+                Intraday · 5 Min
+              </p>
+              <div style={{ background: "white", border: "1px solid var(--border)", borderRadius: "12px", padding: "1rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                <MarketChart
+                  priceChartTitle="S&P 500 Trend"
+                  volChartTitle="Market Volatility"
+                  priceSeries={priceSeries}
+                  volatilitySeries={volatilitySeries}
+                />
+              </div>
+            </div>
+            <div>
+              <p style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-muted)", fontWeight: 500, marginBottom: "0.5rem", fontFamily: "DM Sans, sans-serif" }}>
+                Last 30 Days
+              </p>
+              <div style={{ background: "white", border: "1px solid var(--border)", borderRadius: "12px", padding: "1rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                <MarketChart
+                  priceChartTitle="S&P 500 (30-Day)"
+                  volChartTitle="VIX (30-Day)"
+                  priceSeries={sp500DailySeries}
+                  volatilitySeries={vixDailySeries}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Indian Market Charts ── */}
+        <section style={{ marginBottom: "2rem", background: "white", border: "1px solid var(--border)", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+            <span style={{
+              width: "32px", height: "32px", background: "var(--navy)", color: "white",
+              borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "0.65rem", fontWeight: 700, fontFamily: "DM Sans, sans-serif", letterSpacing: "0.05em",
+            }}>IN</span>
+            <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)" }}>
+              Indian Market
+            </h2>
+            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+          </div>
+          <div className="chart-pair" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(480px, 1fr))", gap: "1.5rem" }}>
+            <div>
+              <p style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-muted)", fontWeight: 500, marginBottom: "0.5rem", fontFamily: "DM Sans, sans-serif" }}>
+                Intraday · 5 Min
+              </p>
+              <div style={{ background: "white", border: "1px solid var(--border)", borderRadius: "12px", padding: "1rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                <MarketChart
+                  priceChartTitle="NIFTY 50 Trend"
+                  volChartTitle="India VIX"
+                  priceSeries={niftySeries}
+                  volatilitySeries={indiaVixSeries}
+                />
+              </div>
+            </div>
+            <div>
+              <p style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-muted)", fontWeight: 500, marginBottom: "0.5rem", fontFamily: "DM Sans, sans-serif" }}>
+                Last 30 Days
+              </p>
+              <div style={{ background: "white", border: "1px solid var(--border)", borderRadius: "12px", padding: "1rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                <MarketChart
+                  priceChartTitle="NIFTY 50 (30-Day)"
+                  volChartTitle="India VIX (30-Day)"
+                  priceSeries={niftyDailySeries}
+                  volatilitySeries={indiaVixDailySeries}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
 
-function InsightCard({ title, value, valueColor = "#111827" }) {
+function InsightCard({ label, value, valueColor = "var(--ink)", accentColor = "var(--gold)", riskScore }) {
   return (
-    <article style={insightCard}>
-      <p style={cardTitle}>{title}</p>
-      <p style={{ ...cardValue, color: valueColor }}>{value}</p>
-    </article>
+    <div style={{
+      background: "white",
+      border: "1px solid var(--border)",
+      borderRadius: "12px",
+      padding: "1.25rem 1.1rem",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: accentColor }} />
+      <p style={{ fontSize: "0.72rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-muted)", marginBottom: "0.5rem", fontFamily: "DM Sans, sans-serif" }}>
+        {label}
+      </p>
+      <p style={{ fontFamily: "Playfair Display, serif", fontSize: "1.55rem", fontWeight: 700, color: valueColor, lineHeight: 1, margin: 0 }}>
+        {value}
+      </p>
+      {riskScore != null && (
+        <div style={{ marginTop: "0.5rem", height: "4px", background: "var(--border)", borderRadius: "2px", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${Math.min(100, (riskScore / 10) * 100)}%`, background: accentColor, borderRadius: "2px" }} />
+        </div>
+      )}
+    </div>
   );
 }
-
-// ── styles ────────────────────────────────────────────────────────────────────
-const wrap = {
-  maxWidth: "1200px",
-  margin: "1.5rem auto",
-  padding: "0 1rem",
-  fontFamily: "Arial, sans-serif",
-};
-const cardGrid = {
-  display: "grid",
-  gap: "1rem",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  marginTop: "1rem",
-};
-const insightCard = {
-  border: "1px solid #e5e7eb",
-  borderRadius: "0.75rem",
-  padding: "1rem",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-  background: "#fff",
-};
-const cardTitle = { margin: 0, fontSize: "0.9rem", color: "#6b7280" };
-const cardValue = { margin: "0.5rem 0 0", fontWeight: 700, fontSize: "1.45rem" };
-const analysisPanel = {
-  marginTop: "1rem",
-  border: "1px solid #e5e7eb",
-  borderRadius: "0.75rem",
-  padding: "1rem",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-  background: "#fff",
-};
-const sectionTitle = { margin: "0 0 0.5rem", fontSize: "1.1rem" };
-const signalLink = { color: "#1565c0", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem" };
-const marketSection = {
-  marginTop: "2rem",
-  border: "1px solid #e5e7eb",
-  borderRadius: "1rem",
-  padding: "1.25rem",
-  background: "#fff",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-};
-const marketSectionHeader = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.5rem",
-  marginBottom: "1rem",
-};
-const marketFlag = { fontSize: "1.4rem" };
-const marketTitle = { margin: 0, fontSize: "1.2rem", fontWeight: 700 };
-const chartGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(480px, 1fr))",
-  gap: "1.5rem",
-};
-const chartBox = {
-  minWidth: 0,
-};
-const chartLabel = {
-  margin: "0 0 0.4rem",
-  fontSize: "0.8rem",
-  fontWeight: 600,
-  color: "#6b7280",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-};
-const riskSection = {
-  marginTop: "1.5rem",
-  border: "1px solid #e5e7eb",
-  borderRadius: "1rem",
-  padding: "1.25rem",
-  background: "#fff",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-};
-const riskSectionHeader = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.5rem",
-  marginBottom: "1rem",
-};
