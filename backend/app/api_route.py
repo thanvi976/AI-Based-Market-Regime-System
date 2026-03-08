@@ -23,23 +23,76 @@ def compute_signal(price: float | None, ma20: float | None, momentum: float | No
     return "HOLD"
 
 
-def get_market_data_for_assistant() -> dict:
-    """Fetch current market prediction data for the assistant context."""
-    from backend.app.services.market_cache import get_cached_data
-    from backend.app.services.prediction_service import generate_market_prediction
+def get_market_data_for_assistant(ticker: str | None = None) -> dict:
+    """Fetch market data — India risk for Indian stocks, US risk for US stocks."""
+    is_indian = ticker and (ticker.endswith(".NS") or ticker.endswith(".BO"))
 
-    df = get_cached_data()
-    if df is None or df.empty:
-        return {}
-    result = generate_market_prediction(raw_data=df)
-    return {
-        "market_regime": result.market_regime,
-        "crash_probability": result.crash_probability,
-        "risk_score": result.risk_score,
-        "volatility": result.volatility,
-        "trend_strength": result.trend_strength,
-        "momentum": result.momentum,
-    }
+    if is_indian:
+        # ── India market risk ─────────────────────────────────────────────────
+        from backend.app.services.market_cache import get_cached_data
+        from backend.app.services.risk_score import calculate_risk_score
+
+        df = get_cached_data()
+        if df is None or df.empty:
+            return {}
+
+        india_df = df[df["nifty_close"].diff().fillna(1) != 0].copy()
+        india_df["returns"] = india_df["nifty_close"].pct_change()
+        india_df["volatility"] = india_df["returns"].rolling(20).std()
+        india_df["momentum"] = india_df["nifty_close"].pct_change(10)
+        india_df["trend_strength"] = india_df["nifty_close"].pct_change(50)
+        india_df = india_df.fillna(0)
+
+        latest = india_df.tail(1).iloc[0]
+        volatility = float(latest["volatility"])
+        momentum = float(latest["momentum"])
+        trend_strength = float(latest["trend_strength"])
+        india_vix = float(latest.get("india_vix_close", 15))
+
+        crash_probability = max(0.0, min(1.0, (india_vix / 100) + max(0.0, -momentum) * 3.5))
+
+        if volatility > 0.025:
+            market_regime = "High Volatility"
+        elif trend_strength > 0.015:
+            market_regime = "Bull Market"
+        elif trend_strength < -0.015:
+            market_regime = "Bear Market"
+        else:
+            market_regime = "Sideways"
+
+        risk_score = calculate_risk_score(
+            volatility=volatility,
+            crash_probability=crash_probability,
+            momentum=momentum,
+            trend_strength=trend_strength,
+        )
+
+        return {
+            "market_regime": market_regime,
+            "crash_probability": round(crash_probability, 4),
+            "risk_score": risk_score,
+            "volatility": round(volatility, 6),
+            "trend_strength": round(trend_strength, 4),
+            "momentum": round(momentum, 4),
+        }
+
+    else:
+        # ── US market risk ────────────────────────────────────────────────────
+        from backend.app.services.market_cache import get_cached_data
+        from backend.app.services.prediction_service import generate_market_prediction
+
+        df = get_cached_data()
+        if df is None or df.empty:
+            return {}
+        result = generate_market_prediction(raw_data=df)
+        return {
+            "market_regime": result.market_regime,
+            "crash_probability": result.crash_probability,
+            "risk_score": result.risk_score,
+            "volatility": result.volatility,
+            "trend_strength": result.trend_strength,
+            "momentum": result.momentum,
+        }
 
 
 def run_trading_assistant(question: str) -> dict:
@@ -77,7 +130,8 @@ def run_trading_assistant(question: str) -> dict:
             }
             price = cp
 
-    market_data = get_market_data_for_assistant()
+    # ── Pass ticker so correct market data is fetched ─────────────────────────
+    market_data = get_market_data_for_assistant(ticker=ticker)
     analysis = ask_trading_ai(question=question, stock_data=stock_data_dict, market_data=market_data)
 
     return {

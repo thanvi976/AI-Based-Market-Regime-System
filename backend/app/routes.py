@@ -115,7 +115,68 @@ def market_signal():
     except Exception as exc:
         logger.exception("Failed to generate market signal")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+@router.get("/india-signal")
+def india_signal():
+    try:
+        df = get_cached_data()
+        if df is None or df.empty:
+            raise HTTPException(status_code=503, detail="Market cache not ready")
 
+        india_df = _real_india_rows(df).copy()
+        india_df["returns"] = india_df["nifty_close"].pct_change()
+        india_df["volatility"] = india_df["returns"].rolling(20).std()
+        india_df["momentum"] = india_df["nifty_close"].pct_change(10)
+        india_df["trend_strength"] = india_df["nifty_close"].pct_change(50)
+        india_df = india_df.fillna(0)
+
+        latest = india_df.tail(1).iloc[0]
+        volatility = float(latest["volatility"])
+        momentum = float(latest["momentum"])
+        trend_strength = float(latest["trend_strength"])
+        india_vix = float(latest.get("india_vix_close", 15))
+
+        crash_probability = max(0.0, min(1.0, (india_vix / 100) + max(0.0, -momentum) * 3.5))
+
+        if volatility > 0.025:
+            market_regime = "High Volatility"
+        elif trend_strength > 0.015:
+            market_regime = "Bull Market"
+        elif trend_strength < -0.015:
+            market_regime = "Bear Market"
+        else:
+            market_regime = "Sideways"
+
+        risk_score = calculate_risk_score(
+            volatility=volatility,
+            crash_probability=crash_probability,
+            momentum=momentum,
+            trend_strength=trend_strength,
+        )
+
+        signal_result = generate_signal(
+            crash_probability=crash_probability,
+            trend_strength=trend_strength,
+            momentum=momentum,
+            volatility=volatility,
+            risk_score=risk_score,
+            market_regime=market_regime,
+        )
+
+        return {
+            "signal": signal_result.signal,
+            "confidence": signal_result.confidence,
+            "explanation": signal_result.explanation,
+            "market_regime": market_regime,
+            "risk_score": risk_score,
+            "volatility": round(volatility, 6),
+            "crash_probability": round(crash_probability, 4),
+            "updated_at": get_cached_timestamp(),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to generate India signal")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 @router.get("/india-market")
 def india_market():

@@ -48,6 +48,14 @@ export async function fetchMarketSignal() {
   return response.json();
 }
 
+export async function fetchIndiaSignal() {
+  const response = await fetch(`${API_BASE}/india-signal`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch India signal: ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function askTradingAssistant(question) {
   const response = await fetch(`${API_BASE}/ai/trading-assistant`, {
     method: "POST",
@@ -60,17 +68,19 @@ export async function askTradingAssistant(question) {
   }
   return response.json();
 }
+
 export async function fetchMarketHistoryDaily() {
-  const res = await fetch("http://localhost:8000/market-history-daily");
+  const res = await fetch(`${API_BASE}/market-history-daily`);
   if (!res.ok) throw new Error("Failed to fetch US daily history");
   return res.json();
 }
 
 export async function fetchIndiaHistoryDaily() {
-  const res = await fetch("http://localhost:8000/india-history-daily");
+  const res = await fetch(`${API_BASE}/india-history-daily`);
   if (!res.ok) throw new Error("Failed to fetch India daily history");
   return res.json();
 }
+
 export async function fetchIndiaRisk() {
   const response = await fetch(`${API_BASE}/india-risk`);
   if (!response.ok) {
