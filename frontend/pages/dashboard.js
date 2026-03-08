@@ -13,14 +13,16 @@ import {
 const REFRESH_MS = 5 * 60 * 1000;
 
 // ── fetch daily history directly ─────────────────────────────────────────────
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+
 async function fetchMarketHistoryDaily() {
-  const res = await fetch("http://localhost:8000/market-history-daily");
+  const res = await fetch(`${API_BASE}/market-history-daily`);
   if (!res.ok) throw new Error("Failed to fetch US daily history");
   return res.json();
 }
 
 async function fetchIndiaHistoryDaily() {
-  const res = await fetch("http://localhost:8000/india-history-daily");
+  const res = await fetch(`${API_BASE}/india-history-daily`);
   if (!res.ok) throw new Error("Failed to fetch India daily history");
   return res.json();
 }
