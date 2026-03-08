@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { useState } from "react";
 import { askTradingAssistant } from "../services/api";
@@ -68,6 +69,114 @@ const SIGNAL_CONFIG = {
   hold: { label: "Hold / Wait", bg: "#fef9c3", color: "#854d0e", border: "#fde047", dot: "#eab308" },
 };
 
+// ── Kai: animated cat mascot ─────────────────────────────────────────────────
+function KaiCat({ state = "idle" }) {
+  return (
+    <div style={{ width: "52px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+      <svg viewBox="0 0 100 110" width="52" height="57" style={{ overflow: "visible" }}>
+
+        {/* ── TAIL (behind body) ── */}
+        <path
+          d="M72,90 Q92,75 88,58 Q85,45 75,55"
+          stroke="#C9A84C"
+          strokeWidth="7"
+          fill="none"
+          strokeLinecap="round"
+          style={{
+            transformOrigin: "72px 90px",
+            animation: state === "thinking"
+              ? "kaiTailFast 0.35s ease-in-out infinite alternate"
+              : "kaiTailWag 2.2s ease-in-out infinite alternate",
+          }}
+        />
+
+        {/* ── BODY ── */}
+        <ellipse cx="50" cy="82" rx="26" ry="22" fill="#D4A843" />
+
+        {/* ── BELLY ── */}
+        <ellipse cx="50" cy="86" rx="14" ry="13" fill="#E8C97A" />
+
+        {/* ── HEAD ── */}
+        <circle cx="50" cy="48" r="28" fill="#D4A843" />
+
+        {/* ── EARS ── */}
+        <polygon points="22,28 18,6 38,24" fill="#D4A843" />
+        <polygon points="24,27 21,10 36,24" fill="#E8A0A0" />
+        <polygon points="78,28 82,6 62,24" fill="#D4A843" />
+        <polygon points="76,27 79,10 64,24" fill="#E8A0A0" />
+
+        {/* ── FACE ── */}
+        {state === "thinking" ? (
+          <>
+            <path d="M36,46 Q41,42 46,46" stroke="#2A1A08" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+            <path d="M54,46 Q59,42 64,46" stroke="#2A1A08" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          </>
+        ) : state === "bull" ? (
+          <>
+            <path d="M36,48 Q41,54 46,48" stroke="#2A1A08" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+            <path d="M54,48 Q59,54 64,48" stroke="#2A1A08" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          </>
+        ) : state === "bear" ? (
+          <>
+            <circle cx="41" cy="47" r="6" fill="#2A1A08" />
+            <circle cx="59" cy="47" r="6" fill="#2A1A08" />
+            <circle cx="43" cy="45" r="2" fill="white" />
+            <circle cx="61" cy="45" r="2" fill="white" />
+            <path d="M34,38 Q41,34 48,38" stroke="#8B3A3A" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M52,38 Q59,34 66,38" stroke="#8B3A3A" strokeWidth="2" fill="none" strokeLinecap="round" />
+          </>
+        ) : (
+          <>
+            <circle cx="41" cy="47" r="6.5" fill="#2A1A08" />
+            <circle cx="59" cy="47" r="6.5" fill="#2A1A08" />
+            <circle cx="43.5" cy="44.5" r="2.2" fill="white" />
+            <circle cx="61.5" cy="44.5" r="2.2" fill="white" />
+            <circle cx="44.8" cy="43.2" r="0.9" fill="white" opacity="0.6" />
+            <circle cx="62.8" cy="43.2" r="0.9" fill="white" opacity="0.6" />
+          </>
+        )}
+
+        {/* Nose */}
+        <path d="M46,56 Q50,54 54,56 L50,60 Z" fill="#C47A7A" />
+
+        {/* Mouth */}
+        <path d="M44,61 Q50,66 56,61" stroke="#C47A7A" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+
+        {/* Whiskers */}
+        <line x1="10" y1="52" x2="40" y2="55" stroke="#E8D5A3" strokeWidth="1.2" opacity="0.75" />
+        <line x1="10" y1="58" x2="40" y2="58" stroke="#E8D5A3" strokeWidth="1.2" opacity="0.75" />
+        <line x1="90" y1="52" x2="60" y2="55" stroke="#E8D5A3" strokeWidth="1.2" opacity="0.75" />
+        <line x1="90" y1="58" x2="60" y2="58" stroke="#E8D5A3" strokeWidth="1.2" opacity="0.75" />
+
+        {/* ── THINKING DOTS ── */}
+        {state === "thinking" && (
+          <g transform="translate(78, 10)">
+            <circle cx="0" cy="0" r="3.5" fill="#C9A84C" style={{ animation: "kaiDot 1s ease-in-out infinite 0s" }} />
+            <circle cx="10" cy="0" r="3.5" fill="#C9A84C" style={{ animation: "kaiDot 1s ease-in-out infinite 0.2s" }} />
+            <circle cx="20" cy="0" r="3.5" fill="#C9A84C" style={{ animation: "kaiDot 1s ease-in-out infinite 0.4s" }} />
+          </g>
+        )}
+
+      </svg>
+
+      <span style={{
+        fontSize: "0.62rem",
+        fontFamily: "DM Sans, sans-serif",
+        color: "#8C8070",
+        letterSpacing: "0.1em",
+        fontWeight: 500,
+        textTransform: "uppercase",
+      }}>Kai</span>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes kaiTailWag { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
+        @keyframes kaiTailFast { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
+        @keyframes kaiDot { 0%,100% { opacity: 0.2; transform: translateY(0px); } 50% { opacity: 1; transform: translateY(-5px); } }
+      `}} />
+    </div>
+  );
+}
+
 // ── component ─────────────────────────────────────────────────────────────────
 export default function TradingAssistantPage() {
   const [question, setQuestion] = useState("");
@@ -98,6 +207,14 @@ export default function TradingAssistantPage() {
 
   const badgeStyle = sig ? { buy: { bg: "#E8F5E9", color: "#2C4A3E", border: "#A5D6A7" }, sell: { bg: "#FDECEA", color: "#8B3A3A", border: "#FFAB91" }, hold: { bg: "#FFF8E7", color: "#C17F4A", border: "#FFE082" } }[parsed.signalEmoji] || { bg: sig.bg, color: sig.color, border: sig.border } : null;
 
+  const kaiState = loading
+    ? "thinking"
+    : parsed?.signalEmoji === "buy"
+      ? "bull"
+      : parsed?.signalEmoji === "sell"
+        ? "bear"
+        : "idle";
+
   return (
     <main className="ta-page-pad" style={styles.wrap}>
       {/* ── Nav ─────────────────────────────────────────────────── */}
@@ -121,20 +238,31 @@ export default function TradingAssistantPage() {
 
       {/* ── Search form ─────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} style={styles.form}>
-        <div className="ta-input-wrap" style={styles.inputWrap}>
-          <input
-            type="text"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="e.g. Can I invest in Reliance now?"
-            style={styles.input}
-            disabled={loading}
-          />
-          <button type="submit" disabled={loading} style={styles.button}>
-            {loading ? (
-              <><span style={styles.spinner} />Analyzing…</>
-            ) : "Ask Kai"}
-          </button>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "1rem",
+          maxWidth: "720px",
+          margin: "2rem auto 0",
+          padding: "0 1.5rem",
+          paddingBottom: "1rem",
+        }}>
+          <KaiCat state={kaiState} />
+          <div className="ta-input-wrap" style={{ flex: 1, ...styles.inputWrap }}>
+            <input
+              type="text"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="e.g. Can I invest in Reliance now?"
+              style={styles.input}
+              disabled={loading}
+            />
+            <button type="submit" disabled={loading} style={styles.button}>
+              {loading ? (
+                <><span style={styles.spinner} />Analyzing…</>
+              ) : "Ask Kai"}
+            </button>
+          </div>
         </div>
       </form>
 

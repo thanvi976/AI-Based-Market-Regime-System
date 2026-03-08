@@ -46,7 +46,7 @@ export default function HomePage() {
         <div style={{ display:'flex', alignItems:'center', gap:'2rem' }} className="nav-links">
           <Link href="/dashboard" style={{ fontSize:'0.875rem', color:'var(--ink-muted)', textDecoration:'none' }}>Dashboard</Link>
           <Link href="/signal"    style={{ fontSize:'0.875rem', color:'var(--ink-muted)', textDecoration:'none' }}>Signal</Link>
-          <Link href="/trading-assistant" style={{ fontSize:'0.875rem', color:'var(--ink-muted)', textDecoration:'none' }}>Assistant</Link>
+          <Link href="/trading-assistant" style={{ fontSize:'0.875rem', color:'var(--ink-muted)', textDecoration:'none' }}> AI Assistant</Link>
           
         </div>
       </nav>

@@ -203,7 +203,7 @@ export default function DashboardPage() {
         </Link>
         <div style={{ display: "flex", gap: "1.5rem" }}>
           
-          <Link href="/trading-assistant" style={{ fontSize: "0.875rem", color: "var(--ink-muted)", textDecoration: "none" }}>Assistant</Link>
+          <Link href="/trading-assistant" style={{ fontSize: "0.875rem", color: "var(--ink-muted)", textDecoration: "none" }}>AI Assistant</Link>
         </div>
       </nav>
 
