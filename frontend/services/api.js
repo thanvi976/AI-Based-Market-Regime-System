@@ -60,3 +60,14 @@ export async function askTradingAssistant(question) {
   }
   return response.json();
 }
+export async function fetchMarketHistoryDaily() {
+  const res = await fetch("http://localhost:8000/market-history-daily");
+  if (!res.ok) throw new Error("Failed to fetch US daily history");
+  return res.json();
+}
+
+export async function fetchIndiaHistoryDaily() {
+  const res = await fetch("http://localhost:8000/india-history-daily");
+  if (!res.ok) throw new Error("Failed to fetch India daily history");
+  return res.json();
+}
