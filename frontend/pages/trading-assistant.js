@@ -388,7 +388,7 @@ export default function TradingAssistantPage() {
       <style dangerouslySetInnerHTML={{ __html: `
         .ta-input-wrap:focus-within { border-color: #C9A84C !important; box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
         .ta-input-wrap input::placeholder { color: #8C8070; }
-        .ta-link-btn:hover { border-color: #C9A84C !important; color: #C9A84C !important; }
+        .ta-link-btn:hover { background: #2a3d52 !important; color: #fff !important; }
         @media (max-width: 768px) {
           .ta-page-pad { padding-left: 1rem !important; padding-right: 1rem !important; }
           .ta-grid { grid-template-columns: 1fr !important; }
@@ -742,13 +742,13 @@ const styles = {
   linkBtn: {
     display: "inline-block",
     padding: "0.65rem 1.4rem",
-    border: "1.5px solid #E8E2D9",
+    border: "none",
     borderRadius: "8px",
     fontFamily: "'DM Sans', sans-serif",
     fontSize: "0.875rem",
     fontWeight: 600,
-    color: "#1E2D40",
-    background: "transparent",
+    color: "#fff",
+    background: "#1E2D40",
     textDecoration: "none",
     transition: "all 0.2s",
   },
