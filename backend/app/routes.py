@@ -3,6 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 import pandas as pd
 
+from backend.app.services.risk_score import calculate_risk_score
+
+
 from backend.app.services.market_cache import get_cached_data, get_cached_timestamp
 from backend.app.services.prediction_service import generate_market_prediction
 from backend.app.services.signal_engine import generate_signal
@@ -266,4 +269,57 @@ def india_history_daily():
         raise
     except Exception as exc:
         logger.exception("Failed to fetch India daily history")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@router.get("/india-risk")
+def india_risk():
+    try:
+        df = get_cached_data()
+        if df is None or df.empty:
+            raise HTTPException(status_code=503, detail="Market cache not ready")
+
+        india_df = _real_india_rows(df).copy()
+        india_df["returns"] = india_df["nifty_close"].pct_change()
+        india_df["volatility"] = india_df["returns"].rolling(20).std()
+        india_df["momentum"] = india_df["nifty_close"].pct_change(10)
+        india_df["trend_strength"] = india_df["nifty_close"].pct_change(50)
+        india_df = india_df.fillna(0)
+
+        latest = india_df.tail(1).iloc[0]
+        volatility = float(latest["volatility"])
+        momentum = float(latest["momentum"])
+        trend_strength = float(latest["trend_strength"])
+        india_vix = float(latest.get("india_vix_close", 15))
+
+        # Heuristic crash probability using India VIX + momentum
+        crash_probability = max(0.0, min(1.0, (india_vix / 100) + max(0.0, -momentum) * 3.5))
+
+        # Regime based on trend + volatility
+        if volatility > 0.025:
+            market_regime = "High Volatility"
+        elif trend_strength > 0.015:
+            market_regime = "Bull Market"
+        elif trend_strength < -0.015:
+            market_regime = "Bear Market"
+        else:
+            market_regime = "Sideways"
+
+        risk_score = calculate_risk_score(
+            volatility=volatility,
+            crash_probability=crash_probability,
+            momentum=momentum,
+            trend_strength=trend_strength,
+        )
+
+        return {
+            "market_regime": market_regime,
+            "crash_probability": round(crash_probability, 4),
+            "risk_score": risk_score,
+            "volatility": round(volatility, 6),
+            "updated_at": get_cached_timestamp(),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to generate India risk")
         raise HTTPException(status_code=500, detail=str(exc)) from exc

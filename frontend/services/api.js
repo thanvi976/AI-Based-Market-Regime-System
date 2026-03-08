@@ -71,3 +71,10 @@ export async function fetchIndiaHistoryDaily() {
   if (!res.ok) throw new Error("Failed to fetch India daily history");
   return res.json();
 }
+export async function fetchIndiaRisk() {
+  const response = await fetch(`${API_BASE}/india-risk`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch India risk: ${response.status}`);
+  }
+  return response.json();
+}

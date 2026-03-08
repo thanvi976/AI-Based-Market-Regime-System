@@ -4,6 +4,7 @@ import MarketChart from "../components/MarketChart";
 import {
   fetchIndiaHistory,
   fetchIndiaMarket,
+  fetchIndiaRisk,
   fetchMarketData,
   fetchMarketHistory,
   fetchMarketRisk,
@@ -11,7 +12,7 @@ import {
 
 const REFRESH_MS = 5 * 60 * 1000;
 
-// ── fetch daily history directly (no api.js change needed) ───────────────────
+// ── fetch daily history directly ─────────────────────────────────────────────
 async function fetchMarketHistoryDaily() {
   const res = await fetch("http://localhost:8000/market-history-daily");
   if (!res.ok) throw new Error("Failed to fetch US daily history");
@@ -38,6 +39,7 @@ function buildSeries(point, key, fallback = 0) {
 
 export default function DashboardPage() {
   const [risk, setRisk] = useState(null);
+  const [indiaRisk, setIndiaRisk] = useState(null);
   const [marketData, setMarketData] = useState(null);
   const [historyData, setHistoryData] = useState(null);
   const [indiaData, setIndiaData] = useState(null);
@@ -64,15 +66,18 @@ export default function DashboardPage() {
       }
 
       try {
-        const [indiaResult, indiaHistoryResult] = await Promise.all([
+        const [indiaResult, indiaHistoryResult, indiaRiskResult] = await Promise.all([
           fetchIndiaMarket(),
           fetchIndiaHistory(),
+          fetchIndiaRisk(),
         ]);
         setIndiaData(indiaResult);
         setIndiaHistory(indiaHistoryResult);
+        setIndiaRisk(indiaRiskResult);
       } catch {
         setIndiaData(null);
         setIndiaHistory(null);
+        setIndiaRisk(null);
       }
 
       try {
@@ -124,7 +129,6 @@ export default function DashboardPage() {
     return dates.map((d, i) => ({ label: d, value: Number(prices[i]) }));
   }, [usDailyHistory]);
 
-  // ── FIX: US VIX 30-day series ─────────────────────────────────────────────
   const vixDailySeries = useMemo(() => {
     const dates = usDailyHistory?.dates;
     const vix = usDailyHistory?.vix;
@@ -162,7 +166,7 @@ export default function DashboardPage() {
     return dates.map((d, i) => ({ label: d, value: Number(vix[i]) }));
   }, [indiaDailyHistory]);
 
-  // ── derived values ─────────────────────────────────────────────────────────
+  // ── US derived values ──────────────────────────────────────────────────────
   const volatilityValue = Number(risk?.volatility || 0);
   const volatilityLabel = volatilityValue < 0.003 ? "Low" : volatilityValue < 0.01 ? "Medium" : "High";
   const crashPercent = Math.round(Number(risk?.crash_probability || 0) * 100);
@@ -170,6 +174,15 @@ export default function DashboardPage() {
   const regimeColor = regime.includes("Bull") ? "#2e7d32" : regime.includes("Bear") ? "#c62828" : "#f9a825";
   const riskScoreTen = (Number(risk?.risk_score || 0) / 10).toFixed(1);
   const marketAnalysis = `The market is currently in a ${regime} regime with ${volatilityLabel.toLowerCase()} volatility and a risk score of ${riskScoreTen}/10. Crash probability is currently ${crashPercent}%, indicating ${crashPercent < 20 ? "stable" : crashPercent < 50 ? "moderately risky" : "high-risk"} market conditions.`;
+
+  // ── India derived values ───────────────────────────────────────────────────
+  const indiaVolatilityValue = Number(indiaRisk?.volatility || 0);
+  const indiaVolatilityLabel = indiaVolatilityValue < 0.003 ? "Low" : indiaVolatilityValue < 0.01 ? "Medium" : "High";
+  const indiaCrashPercent = Math.round(Number(indiaRisk?.crash_probability || 0) * 100);
+  const indiaRegime = indiaRisk?.market_regime || "Neutral";
+  const indiaRegimeColor = indiaRegime.includes("Bull") ? "#2e7d32" : indiaRegime.includes("Bear") ? "#c62828" : "#f9a825";
+  const indiaRiskScoreTen = (Number(indiaRisk?.risk_score || 0) / 10).toFixed(1);
+  const indiaAnalysis = `The Indian market is currently in a ${indiaRegime} regime with ${indiaVolatilityLabel.toLowerCase()} volatility and a risk score of ${indiaRiskScoreTen}/10. Crash probability is currently ${indiaCrashPercent}%, indicating ${indiaCrashPercent < 20 ? "stable" : indiaCrashPercent < 50 ? "moderately risky" : "high-risk"} market conditions.`;
 
   return (
     <main style={wrap}>
@@ -180,6 +193,7 @@ export default function DashboardPage() {
 
       {error ? <p style={{ color: "#d32f2f" }}>{error}</p> : null}
 
+      {/* ── US Market Risk ── */}
       <section style={riskSection}>
         <div style={riskSectionHeader}>
           <span style={marketFlag}>🇺🇸</span>
@@ -197,7 +211,25 @@ export default function DashboardPage() {
         </section>
       </section>
 
-      {/* ── US Market ── */}
+      {/* ── India Market Risk ── */}
+      <section style={riskSection}>
+        <div style={riskSectionHeader}>
+          <span style={marketFlag}>🇮🇳</span>
+          <h2 style={marketTitle}>India Market Risk</h2>
+        </div>
+        <section style={cardGrid}>
+          <InsightCard title="Market Regime" value={indiaRegime} valueColor={indiaRegimeColor} />
+          <InsightCard title="Crash Probability" value={`${indiaCrashPercent}%`} />
+          <InsightCard title="Risk Score" value={`${indiaRiskScoreTen} / 10`} />
+          <InsightCard title="Volatility" value={indiaVolatilityLabel} />
+        </section>
+        <section style={analysisPanel}>
+          <h2 style={sectionTitle}>Market Analysis</h2>
+          <p style={{ margin: 0, color: "#374151", lineHeight: 1.6 }}>{indiaAnalysis}</p>
+        </section>
+      </section>
+
+      {/* ── US Market Charts ── */}
       <section style={marketSection}>
         <div style={marketSectionHeader}>
           <span style={marketFlag}>🇺🇸</span>
@@ -225,7 +257,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ── Indian Market ── */}
+      {/* ── Indian Market Charts ── */}
       <section style={marketSection}>
         <div style={marketSectionHeader}>
           <span style={marketFlag}>🇮🇳</span>
