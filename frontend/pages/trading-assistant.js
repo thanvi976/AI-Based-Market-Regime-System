@@ -96,31 +96,32 @@ export default function TradingAssistantPage() {
   const sig = parsed ? SIGNAL_CONFIG[parsed.signalEmoji] || SIGNAL_CONFIG.hold : null;
   const currSymbol = result?.currency === "USD" ? "$" : "₹";
 
+  const badgeStyle = sig ? { buy: { bg: "#E8F5E9", color: "#2C4A3E", border: "#A5D6A7" }, sell: { bg: "#FDECEA", color: "#8B3A3A", border: "#FFAB91" }, hold: { bg: "#FFF8E7", color: "#C17F4A", border: "#FFE082" } }[parsed.signalEmoji] || { bg: sig.bg, color: sig.color, border: sig.border } : null;
+
   return (
-    <main style={styles.wrap}>
+    <main className="ta-page-pad" style={styles.wrap}>
       {/* ── Nav ─────────────────────────────────────────────────── */}
       <nav style={styles.nav}>
-        <Link href="/" style={styles.navLink}>Home</Link>
-        <Link href="/dashboard" style={styles.navLink}>Dashboard</Link>
-        <Link href="/signal" style={styles.navLink}>Signal</Link>
+        <Link href="/" style={styles.navBrand}>KAIROS <span style={styles.navBrandDot}>·</span> Markets</Link>
+        <div style={styles.navLinks}>
+          <Link href="/" style={styles.navLink}>Home</Link>
+          <Link href="/dashboard" style={styles.navLink}>Dashboard</Link>
+          <Link href="/signal" style={styles.navLink}>Signal</Link>
+        </div>
       </nav>
 
       {/* ── Header ──────────────────────────────────────────────── */}
       <header style={styles.header}>
-        <div style={styles.headerIcon}>📈</div>
-        <div>
-          <h1 style={styles.pageTitle}>AI Trading Assistant</h1>
-          <p style={styles.subtitle}>
-            Get market insight on any stock — price, conditions & short-term outlook.{" "}
-            <span style={{ color: "#9ca3af" }}>Not financial advice.</span>
-          </p>
-        </div>
+        <h1 style={styles.pageTitle}>AI Trading Assistant</h1>
+        <p style={styles.subtitle}>
+          Get market insight on any stock — price, conditions & short-term outlook.{" "}
+          <span style={styles.subtitleDisclaimer}>Not financial advice.</span>
+        </p>
       </header>
 
       {/* ── Search form ─────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.inputWrap}>
-          <span style={styles.inputIcon}>🔍</span>
+        <div className="ta-input-wrap" style={styles.inputWrap}>
           <input
             type="text"
             value={question}
@@ -129,12 +130,12 @@ export default function TradingAssistantPage() {
             style={styles.input}
             disabled={loading}
           />
+          <button type="submit" disabled={loading} style={styles.button}>
+            {loading ? (
+              <><span style={styles.spinner} />Analyzing…</>
+            ) : "Ask Kai"}
+          </button>
         </div>
-        <button type="submit" disabled={loading} style={styles.button}>
-          {loading ? (
-            <><span style={styles.spinner} />Analyzing…</>
-          ) : "Ask AI"}
-        </button>
       </form>
 
       {error && (
@@ -145,208 +146,225 @@ export default function TradingAssistantPage() {
 
       {/* ── Result ──────────────────────────────────────────────── */}
       {result && parsed && (
-        <div style={styles.resultWrap}>
+        <div style={styles.resultOuter}>
+          <div style={styles.resultWrap}>
 
-          {/* Stock header row */}
-          <div style={styles.stockHeader}>
-            <div>
-              <div style={styles.stockName}>{result.stock}</div>
-              {result.price != null && (
-                <div style={styles.stockPrice}>
-                  {currSymbol}{Number(result.price).toLocaleString()}
-                  <span style={styles.stockExchange}>{result.currency === "USD" ? "NASDAQ/NYSE" : "NSE/BSE"}</span>
+            {/* Stock header row */}
+            <div className="ta-stock-header" style={styles.stockHeader}>
+              <div style={styles.stockHeaderLeft}>
+                <div style={styles.stockName}>{result.stock}</div>
+                {result.price != null && (
+                  <div style={styles.stockPrice}>
+                    {currSymbol}{Number(result.price).toLocaleString()}
+                    <span style={styles.stockExchange}>{result.currency === "USD" ? "NASDAQ/NYSE" : "NSE/BSE"}</span>
+                  </div>
+                )}
+              </div>
+              {/* Signal badge — theme colors from badgeStyle */}
+              <div className="ta-signal-badge" style={{ ...styles.signalBadge, background: badgeStyle?.bg ?? sig?.bg, color: badgeStyle?.color ?? sig?.color, borderColor: badgeStyle?.border ?? sig?.border }}>
+                
+                {parsed.signal || sig.label}
+              </div>
+            </div>
+
+            {/* Confidence bar */}
+            {parsed.confidence !== null && (
+              <div style={styles.confRow}>
+                <span style={styles.confLabel}>AI Confidence</span>
+                <div style={styles.confBarBg}>
+                  <div style={{ ...styles.confBarFill, width: `${parsed.confidence}%`, background: badgeStyle?.color ?? sig?.dot }} />
+                </div>
+                <span style={{ ...styles.confPct, color: badgeStyle?.color ?? sig?.color }}>{parsed.confidence}%</span>
+              </div>
+            )}
+
+            <div style={styles.divider} />
+
+            {/* Two-column info grid */}
+            <div className="ta-grid" style={styles.grid}>
+              {/* Market Overview */}
+              {parsed.marketOverview.length > 0 && (
+                <div style={styles.card}>
+                  <div style={styles.cardTitle}>Market Overview</div>
+                  <ul style={styles.list}>
+                    {parsed.marketOverview.map((item, i) => (
+                      <li key={i} style={styles.listItem}>
+                        <span style={styles.bullet} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Stock Indicators */}
+              {parsed.stockIndicators.length > 0 && (
+                <div style={styles.card}>
+                  <div style={styles.cardTitle}>Stock Indicators</div>
+                  <ul style={styles.list}>
+                    {parsed.stockIndicators.map((item, i) => (
+                      <li key={i} style={styles.listItem}>
+                        <span style={styles.bullet} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
-            {/* Signal badge */}
-            <div style={{ ...styles.signalBadge, background: sig.bg, color: sig.color, borderColor: sig.border }}>
-              <span style={{ ...styles.signalDot, background: sig.dot }} />
-              {parsed.signal || sig.label}
-            </div>
-          </div>
 
-          {/* Confidence bar */}
-          {parsed.confidence !== null && (
-            <div style={styles.confRow}>
-              <span style={styles.confLabel}>AI Confidence</span>
-              <div style={styles.confBarBg}>
-                <div style={{ ...styles.confBarFill, width: `${parsed.confidence}%`, background: sig.dot }} />
-              </div>
-              <span style={{ ...styles.confPct, color: sig.color }}>{parsed.confidence}%</span>
-            </div>
-          )}
-
-          <div style={styles.divider} />
-
-          {/* Two-column info grid */}
-          <div style={styles.grid}>
-            {/* Market Overview */}
-            {parsed.marketOverview.length > 0 && (
-              <div style={styles.card}>
-                <div style={styles.cardTitle}>
-                  <span style={styles.cardIcon}>🌐</span> Market Overview
-                </div>
-                <ul style={styles.list}>
-                  {parsed.marketOverview.map((item, i) => (
-                    <li key={i} style={styles.listItem}>
-                      <span style={styles.bullet} />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
+            {/* Short-term outlook */}
+            {parsed.shortTermOutlook && (
+              <div style={styles.outlookBox}>
+                <div style={styles.outlookTitle}>Short-Term Outlook</div>
+                <p style={styles.outlookText}>{parsed.shortTermOutlook}</p>
               </div>
             )}
 
-            {/* Stock Indicators */}
-            {parsed.stockIndicators.length > 0 && (
-              <div style={styles.card}>
-                <div style={styles.cardTitle}>
-                  <span style={styles.cardIcon}>📊</span> Stock Indicators
-                </div>
-                <ul style={styles.list}>
-                  {parsed.stockIndicators.map((item, i) => (
-                    <li key={i} style={styles.listItem}>
-                      <span style={styles.bullet} />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
+            {/* Reason */}
+            {parsed.reason && (
+              <div style={styles.reasonBox}>
+                <div style={styles.reasonLabel}>Why this signal?</div>
+                <p style={styles.reasonText}>{parsed.reason}</p>
               </div>
             )}
+
+            {/* Fallback: if parsing yielded nothing, render raw markdown */}
+            {!parsed.marketOverview.length && !parsed.stockIndicators.length && !parsed.shortTermOutlook && (
+              <div style={styles.rawBox}>
+                <ReactMarkdown
+                  components={{
+                    h3: ({ node, ...p }) => <h3 style={styles.mdH3} {...p} />,
+                    ul: ({ node, ...p }) => <ul style={styles.mdUl} {...p} />,
+                    li: ({ node, ...p }) => <li style={styles.mdLi} {...p} />,
+                    p:  ({ node, ...p }) => <p  style={styles.mdP}  {...p} />,
+                    strong: ({ node, ...p }) => <strong style={styles.mdStrong} {...p} />,
+                  }}
+                >
+                  {parsed.rawFallback}
+                </ReactMarkdown>
+              </div>
+            )}
+
+            <p style={styles.disclaimer}>
+              ⚠️ This analysis is AI-generated and for informational purposes only. Always do your own research before investing.
+            </p>
           </div>
-
-          {/* Short-term outlook */}
-          {parsed.shortTermOutlook && (
-            <div style={styles.outlookBox}>
-              <div style={styles.cardTitle}><span style={styles.cardIcon}>🔭</span> Short-Term Outlook</div>
-              <p style={styles.outlookText}>{parsed.shortTermOutlook}</p>
-            </div>
-          )}
-
-          {/* Reason */}
-          {parsed.reason && (
-            <div style={{ ...styles.reasonBox, borderLeftColor: sig.dot }}>
-              <div style={styles.reasonLabel}>Why this signal?</div>
-              <p style={styles.reasonText}>{parsed.reason}</p>
-            </div>
-          )}
-
-          {/* Fallback: if parsing yielded nothing, render raw markdown */}
-          {!parsed.marketOverview.length && !parsed.stockIndicators.length && !parsed.shortTermOutlook && (
-            <div style={styles.rawBox}>
-              <ReactMarkdown
-                components={{
-                  h3: ({ node, ...p }) => <h3 style={styles.mdH3} {...p} />,
-                  ul: ({ node, ...p }) => <ul style={styles.mdUl} {...p} />,
-                  li: ({ node, ...p }) => <li style={styles.mdLi} {...p} />,
-                  p:  ({ node, ...p }) => <p  style={styles.mdP}  {...p} />,
-                  strong: ({ node, ...p }) => <strong style={{ color: "#1565c0" }} {...p} />,
-                }}
-              >
-                {parsed.rawFallback}
-              </ReactMarkdown>
-            </div>
-          )}
-
-          <p style={styles.disclaimer}>
-            ⚠️ This analysis is AI-generated and for informational purposes only. Always do your own research before investing.
-          </p>
         </div>
       )}
 
-      <p style={{ marginTop: "2rem" }}>
-        <Link href="/dashboard" style={styles.linkBtn}>View Dashboard →</Link>
+      <p style={styles.linkWrap}>
+        <Link href="/dashboard" className="ta-link-btn" style={styles.linkBtn}>View Dashboard →</Link>
       </p>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .ta-input-wrap:focus-within { border-color: #C9A84C !important; box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+        .ta-input-wrap input::placeholder { color: #8C8070; }
+        .ta-link-btn:hover { border-color: #C9A84C !important; color: #C9A84C !important; }
+        @media (max-width: 768px) {
+          .ta-page-pad { padding-left: 1rem !important; padding-right: 1rem !important; }
+          .ta-grid { grid-template-columns: 1fr !important; }
+          .ta-stock-header { flex-direction: column !important; align-items: flex-start !important; }
+          .ta-signal-badge { margin-top: 0.5rem !important; }
+        }
+      `}} />
     </main>
   );
 }
 
-// ── styles ────────────────────────────────────────────────────────────────────
+// ── styles (Kairos theme: parchment, gold, navy) ─────────────────────────────
 const styles = {
   wrap: {
-    maxWidth: "780px",
-    margin: "0 auto",
-    padding: "2rem 1.25rem 4rem",
-    fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
-    color: "#111827",
+    background: "#F8F5F0",
+    minHeight: "100vh",
+    fontFamily: "'DM Sans', sans-serif",
+    padding: 0,
+    margin: 0,
+    color: "#1A1814",
   },
   nav: {
+    background: "#fff",
+    borderBottom: "1px solid #E8E2D9",
+    height: "56px",
     display: "flex",
-    gap: "1.25rem",
-    marginBottom: "2rem",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0 2rem",
   },
-  navLink: {
-    color: "#6b7280",
+  navBrand: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: "1.1rem",
+    fontWeight: 700,
     textDecoration: "none",
-    fontSize: "0.9rem",
-    fontWeight: 500,
-    letterSpacing: "0.01em",
+    color: "#1A1814",
+  },
+  navBrandDot: { color: "#C9A84C" },
+  navLinks: { display: "flex", gap: "1.5rem" },
+  navLink: {
+    color: "#6B6560",
+    textDecoration: "none",
+    fontSize: "0.875rem",
+    fontFamily: "'DM Sans', sans-serif",
   },
   header: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "1rem",
-    marginBottom: "1.75rem",
-  },
-  headerIcon: {
-    fontSize: "2rem",
-    lineHeight: 1,
-    marginTop: "0.1rem",
+    maxWidth: "720px",
+    margin: "0 auto",
+    padding: "2.5rem 1.5rem 0",
   },
   pageTitle: {
-    fontSize: "1.75rem",
+    fontFamily: "'Playfair Display', serif",
+    fontSize: "2rem",
     fontWeight: 700,
-    margin: "0 0 0.3rem",
-    letterSpacing: "-0.02em",
+    fontStyle: "italic",
+    color: "#1A1814",
+    margin: "0 0 0.5rem",
   },
   subtitle: {
     fontSize: "0.95rem",
-    color: "#4b5563",
+    color: "#6B6560",
+    lineHeight: 1.6,
     margin: 0,
+    fontFamily: "'DM Sans', sans-serif",
   },
+  subtitleDisclaimer: { color: "#C9A84C" },
   form: {
-    display: "flex",
-    gap: "0.75rem",
-    marginBottom: "1.5rem",
-    flexWrap: "wrap",
+    maxWidth: "720px",
+    margin: "1.5rem auto 0",
+    padding: "0 1.5rem",
   },
   inputWrap: {
-    flex: 1,
-    minWidth: "220px",
-    position: "relative",
+    background: "#fff",
+    border: "1.5px solid #E8E2D9",
+    borderRadius: "10px",
     display: "flex",
     alignItems: "center",
-  },
-  inputIcon: {
-    position: "absolute",
-    left: "0.85rem",
-    fontSize: "1rem",
-    pointerEvents: "none",
+    overflow: "hidden",
+    transition: "border-color 0.2s",
   },
   input: {
-    width: "100%",
-    padding: "0.75rem 1rem 0.75rem 2.5rem",
+    flex: 1,
+    padding: "0.875rem 1rem",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: "0.95rem",
-    border: "1.5px solid #d1d5db",
-    borderRadius: "10px",
+    background: "transparent",
+    border: "none",
     outline: "none",
-    background: "#f9fafb",
-    boxSizing: "border-box",
+    color: "#1A1814",
   },
   button: {
+    background: "#1E2D40",
+    color: "#fff",
+    border: "none",
+    padding: "0.875rem 1.5rem",
+    fontFamily: "'DM Sans', sans-serif",
+    fontWeight: 600,
+    fontSize: "0.9rem",
+    borderRadius: "0 10px 10px 0",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
     display: "flex",
     alignItems: "center",
     gap: "0.4rem",
-    padding: "0.75rem 1.6rem",
-    fontSize: "0.95rem",
-    fontWeight: 600,
-    color: "#fff",
-    background: "linear-gradient(135deg,#1d4ed8,#1565c0)",
-    border: "none",
-    borderRadius: "10px",
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    boxShadow: "0 2px 8px rgba(21,101,192,0.35)",
   },
   spinner: {
     display: "inline-block",
@@ -358,26 +376,28 @@ const styles = {
     animation: "spin 0.7s linear infinite",
   },
   errorBox: {
-    background: "#fef2f2",
-    border: "1px solid #fecaca",
-    color: "#b91c1c",
+    background: "#FDECEA",
+    border: "1px solid #FFAB91",
+    color: "#8B3A3A",
     borderRadius: "10px",
     padding: "0.85rem 1rem",
     fontSize: "0.9rem",
-    marginBottom: "1rem",
+    maxWidth: "720px",
+    margin: "0.5rem auto 1rem",
   },
 
-  // Result wrapper
+  resultOuter: {
+    maxWidth: "720px",
+    margin: "1.5rem auto",
+    padding: "0 1.5rem",
+  },
   resultWrap: {
     background: "#fff",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #E8E2D9",
     borderRadius: "16px",
     padding: "1.75rem",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
-    marginTop: "0.5rem",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
   },
-
-  // Stock header
   stockHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -386,37 +406,42 @@ const styles = {
     gap: "1rem",
     marginBottom: "1rem",
   },
+  stockHeaderLeft: {},
   stockName: {
-    fontSize: "1.35rem",
+    fontFamily: "'Playfair Display', serif",
+    fontSize: "1.4rem",
     fontWeight: 700,
-    letterSpacing: "-0.01em",
+    color: "#1A1814",
   },
   stockPrice: {
-    fontSize: "1.6rem",
+    fontFamily: "'Playfair Display', serif",
+    fontSize: "1.75rem",
     fontWeight: 700,
-    color: "#111827",
+    color: "#1A1814",
     display: "flex",
     alignItems: "baseline",
-    gap: "0.5rem",
+    flexWrap: "wrap",
+    gap: "0.25rem",
     marginTop: "0.1rem",
   },
   stockExchange: {
-    fontSize: "0.75rem",
-    fontWeight: 400,
-    color: "#9ca3af",
-    letterSpacing: "0.05em",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: "0.72rem",
     textTransform: "uppercase",
+    letterSpacing: "0.1em",
+    color: "#8C8070",
+    marginLeft: "0.5rem",
   },
   signalBadge: {
     display: "inline-flex",
     alignItems: "center",
-    gap: "0.45rem",
-    padding: "0.45rem 1rem",
+    gap: "0.4rem",
+    padding: "0.4rem 1rem",
     borderRadius: "999px",
     border: "1.5px solid",
-    fontSize: "0.88rem",
+    fontSize: "0.8rem",
     fontWeight: 700,
-    letterSpacing: "0.01em",
+    fontFamily: "'DM Sans', sans-serif",
     whiteSpace: "nowrap",
     flexShrink: 0,
   },
@@ -427,25 +452,24 @@ const styles = {
     display: "inline-block",
     flexShrink: 0,
   },
-
-  // Confidence bar
   confRow: {
     display: "flex",
     alignItems: "center",
     gap: "0.75rem",
-    marginBottom: "1.25rem",
+    marginBottom: "1rem",
   },
   confLabel: {
     fontSize: "0.8rem",
-    color: "#6b7280",
+    color: "#6B6560",
     fontWeight: 500,
+    fontFamily: "'DM Sans', sans-serif",
     whiteSpace: "nowrap",
     minWidth: "100px",
   },
   confBarBg: {
     flex: 1,
     height: "8px",
-    background: "#f3f4f6",
+    background: "#E8E2D9",
     borderRadius: "999px",
     overflow: "hidden",
   },
@@ -457,17 +481,15 @@ const styles = {
   confPct: {
     fontSize: "0.85rem",
     fontWeight: 700,
+    fontFamily: "'DM Sans', sans-serif",
     minWidth: "36px",
     textAlign: "right",
   },
-
   divider: {
     height: "1px",
-    background: "#f3f4f6",
-    margin: "0 0 1.25rem",
+    background: "#E8E2D9",
+    margin: "1.25rem 0",
   },
-
-  // Two-column grid
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
@@ -475,24 +497,19 @@ const styles = {
     marginBottom: "1rem",
   },
   card: {
-    background: "#f9fafb",
-    border: "1px solid #e5e7eb",
+    background: "#F8F5F0",
+    border: "1px solid #E8E2D9",
     borderRadius: "12px",
     padding: "1rem 1.1rem",
   },
   cardTitle: {
-    fontSize: "0.82rem",
-    fontWeight: 700,
-    color: "#374151",
+    fontSize: "0.72rem",
     textTransform: "uppercase",
-    letterSpacing: "0.06em",
+    letterSpacing: "0.12em",
+    color: "#C9A84C",
+    fontWeight: 600,
+    fontFamily: "'DM Sans', sans-serif",
     marginBottom: "0.75rem",
-    display: "flex",
-    alignItems: "center",
-    gap: "0.35rem",
-  },
-  cardIcon: {
-    fontSize: "0.95rem",
   },
   list: {
     listStyle: "none",
@@ -507,93 +524,104 @@ const styles = {
     alignItems: "flex-start",
     gap: "0.6rem",
     fontSize: "0.9rem",
-    color: "#374151",
-    lineHeight: 1.5,
+    color: "#1A1814",
+    lineHeight: 1.6,
+    fontFamily: "'DM Sans', sans-serif",
   },
   bullet: {
     width: "6px",
     height: "6px",
     borderRadius: "50%",
-    background: "#93c5fd",
+    background: "#C9A84C",
     flexShrink: 0,
     marginTop: "0.45rem",
   },
-
-  // Outlook
   outlookBox: {
-    background: "#f0f9ff",
-    border: "1px solid #bae6fd",
+    background: "#F2EDE6",
+    border: "1px solid #E8E2D9",
     borderRadius: "12px",
     padding: "1rem 1.1rem",
     marginBottom: "1rem",
   },
+  outlookTitle: {
+    fontSize: "0.72rem",
+    textTransform: "uppercase",
+    letterSpacing: "0.12em",
+    color: "#C9A84C",
+    fontWeight: 600,
+    fontFamily: "'DM Sans', sans-serif",
+    marginBottom: "0.5rem",
+  },
   outlookText: {
     margin: 0,
     fontSize: "0.92rem",
-    color: "#0c4a6e",
-    lineHeight: 1.65,
+    color: "#1A1814",
+    lineHeight: 1.7,
+    fontFamily: "'DM Sans', sans-serif",
   },
-
-  // Reason
   reasonBox: {
-    borderLeft: "3px solid",
+    borderLeft: "3px solid #C9A84C",
     paddingLeft: "1rem",
-    marginBottom: "1.25rem",
+    margin: "1rem 0",
   },
   reasonLabel: {
     fontSize: "0.78rem",
-    fontWeight: 700,
     textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    color: "#6b7280",
+    letterSpacing: "0.1em",
+    color: "#6B6560",
+    fontFamily: "'DM Sans', sans-serif",
     marginBottom: "0.35rem",
   },
   reasonText: {
     margin: 0,
     fontSize: "0.92rem",
-    color: "#374151",
+    color: "#1A1814",
     lineHeight: 1.65,
+    fontFamily: "'DM Sans', sans-serif",
   },
-
-  // Raw markdown fallback
   rawBox: {
     fontSize: "0.92rem",
-    color: "#374151",
+    color: "#1A1814",
     lineHeight: 1.65,
+    fontFamily: "'DM Sans', sans-serif",
   },
   mdH3: {
     fontSize: "0.95rem",
     fontWeight: 700,
-    color: "#111827",
+    color: "#1A1814",
     marginTop: "1rem",
     marginBottom: "0.3rem",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: "1px solid #E8E2D9",
     paddingBottom: "0.2rem",
+    fontFamily: "'Playfair Display', serif",
   },
   mdUl: { paddingLeft: "1.2rem", margin: "0.25rem 0 0.75rem" },
-  mdLi: { marginBottom: "0.4rem", lineHeight: 1.6 },
-  mdP:  { marginBottom: "0.7rem" },
-
+  mdLi: { marginBottom: "0.4rem", lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" },
+  mdP:  { marginBottom: "0.7rem", fontFamily: "'DM Sans', sans-serif" },
+  mdStrong: { color: "#1E2D40" },
   disclaimer: {
     marginTop: "1.25rem",
-    padding: "0.75rem 1rem",
-    background: "#fffbeb",
-    border: "1px solid #fde68a",
+    padding: "0.85rem 1rem",
+    background: "#FFF8E7",
+    border: "1px solid rgba(201,168,76,0.35)",
     borderRadius: "8px",
-    fontSize: "0.8rem",
-    color: "#92400e",
-    lineHeight: 1.5,
+    fontSize: "0.82rem",
+    color: "#8B6914",
+    lineHeight: 1.55,
+    fontFamily: "'DM Sans', sans-serif",
   },
-
+  linkWrap: { marginTop: "2rem", padding: "0 1.5rem", maxWidth: "720px", marginLeft: "auto", marginRight: "auto" },
   linkBtn: {
     display: "inline-block",
-    padding: "0.6rem 1.25rem",
+    padding: "0.65rem 1.4rem",
+    border: "1.5px solid #E8E2D9",
     borderRadius: "8px",
-    textDecoration: "none",
-    color: "#1565c0",
-    background: "#eff6ff",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: "0.875rem",
     fontWeight: 600,
-    fontSize: "0.9rem",
-    border: "1px solid #bfdbfe",
+    color: "#1E2D40",
+    background: "transparent",
+    textDecoration: "none",
+    transition: "all 0.2s",
   },
 };
