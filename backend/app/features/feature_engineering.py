@@ -7,6 +7,7 @@ from backend.app.features.indicators import compute_drawdown, compute_macd, comp
 
 BASE_PRICE_COL = "sp500_close"
 BASE_VOLUME_COL = "sp500_volume"
+VIX_COL = "vix_close"
 
 FEATURE_COLUMNS = [
     "returns",
@@ -21,6 +22,9 @@ FEATURE_COLUMNS = [
     "drawdown",
     "momentum_10",
     "trend_strength",
+    "vix_close",    # ← added: direct fear gauge
+    "vix_ma10",     # ← added: VIX 10-day average
+    "vix_spike",    # ← added: how much VIX is above its own average
 ]
 
 
@@ -39,7 +43,16 @@ def add_market_features(df: pd.DataFrame) -> pd.DataFrame:
     output["drawdown"] = compute_drawdown(output[BASE_PRICE_COL])
     output["volume"] = output.get(BASE_VOLUME_COL, pd.Series(index=output.index))
     output["momentum_10"] = output[BASE_PRICE_COL].pct_change(10)
-    output["trend_strength"] = (output["ma50"] / output["ma200"]) - 1
+    output["trend_strength"] = output["ma50"] - output["ma200"]
+
+    # ── VIX features ──────────────────────────────────────────────────────────
+    if VIX_COL in output.columns:
+        output["vix_close"] = output[VIX_COL]
+    else:
+        output["vix_close"] = 20.0  # neutral fallback if VIX unavailable
+
+    output["vix_ma10"] = output["vix_close"].rolling(10).mean()
+    output["vix_spike"] = (output["vix_close"] / output["vix_ma10"].replace(0, 1)) - 1
 
     output = output.replace([pd.NA], 0).fillna(0)
     return output

@@ -167,18 +167,16 @@ export default function DashboardPage() {
   }, [indiaDailyHistory]);
 
   // ── US derived values ──────────────────────────────────────────────────────
-  const volatilityValue = Number(risk?.volatility || 0);
-  const volatilityLabel = volatilityValue < 0.003 ? "Low" : volatilityValue < 0.01 ? "Medium" : "High";
   const crashPercent = Math.round(Number(risk?.crash_probability || 0) * 100);
+  const volatilityLabel = crashPercent >= 40 ? "High" : crashPercent >= 20 ? "Medium" : "Low";
   const regime = risk?.market_regime || "Neutral";
   const regimeColor = regime.includes("Bull") ? "#2e7d32" : regime.includes("Bear") ? "#c62828" : "#f9a825";
   const riskScoreTen = (Number(risk?.risk_score || 0) / 10).toFixed(1);
   const marketAnalysis = `The market is currently in a ${regime} regime with ${volatilityLabel.toLowerCase()} volatility and a risk score of ${riskScoreTen}/10. Crash probability is currently ${crashPercent}%, indicating ${crashPercent < 20 ? "stable" : crashPercent < 50 ? "moderately risky" : "high-risk"} market conditions.`;
 
   // ── India derived values ───────────────────────────────────────────────────
-  const indiaVolatilityValue = Number(indiaRisk?.volatility || 0);
-  const indiaVolatilityLabel = indiaVolatilityValue < 0.003 ? "Low" : indiaVolatilityValue < 0.01 ? "Medium" : "High";
   const indiaCrashPercent = Math.round(Number(indiaRisk?.crash_probability || 0) * 100);
+  const indiaVolatilityLabel = indiaCrashPercent >= 40 ? "High" : indiaCrashPercent >= 20 ? "Medium" : "Low";
   const indiaRegime = indiaRisk?.market_regime || "Neutral";
   const indiaRegimeColor = indiaRegime.includes("Bull") ? "#2e7d32" : indiaRegime.includes("Bear") ? "#c62828" : "#f9a825";
   const indiaRiskScoreTen = (Number(indiaRisk?.risk_score || 0) / 10).toFixed(1);

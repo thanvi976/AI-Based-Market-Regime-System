@@ -39,7 +39,7 @@ df["dow_jones_volume"] = data["dow_jones"]["Volume"]
 df["vix_volume"] = data["vix"]["Volume"]
 
 # Forward fill missing values
-df = df.fillna(method="ffill")
+df = df.ffill()
 
 print("Computing indicators...")
 
@@ -76,14 +76,21 @@ df["volume"] = df["sp500_volume"]
 rolling_max = df["sp500_close"].cummax()
 df["drawdown"] = (df["sp500_close"] - rolling_max) / rolling_max
 
+# ── VIX-based features ────────────────────────────────────────────────────────
+df["vix_ma10"] = df["vix_close"].rolling(10).mean()
+df["vix_spike"] = (df["vix_close"] / df["vix_ma10"]) - 1   # how much VIX is above its own avg
+
 print("Generating crash labels...")
 
-df["crash"] = (df["drawdown"] < -0.07).astype(int)
+df["crash"] = (df["drawdown"] < -0.04).astype(int)
 
 # Remove early rows where indicators are undefined
 df = df.dropna()
 
 print("Final dataset size:", len(df))
+print("Crash distribution:")
+print(df["crash"].value_counts())
+print("Latest date:", df.index[-1])
 
 df.to_csv("dataset/historical_market_data.csv", index=True)
 
