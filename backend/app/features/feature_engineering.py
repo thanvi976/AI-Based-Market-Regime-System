@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from backend.app.features.indicators import compute_drawdown, compute_macd, compute_rsi
+from app.features.indicators import compute_drawdown, compute_macd, compute_rsi
 
 
 BASE_PRICE_COL = "sp500_close"

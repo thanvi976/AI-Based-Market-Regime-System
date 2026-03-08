@@ -5,9 +5,9 @@ from threading import Lock
 
 import pandas as pd
 
-from backend.app.config import DEFAULT_INTERVAL, DEFAULT_PERIOD, MARKET_CACHE_TTL_MINUTES
-from backend.app.data.market_data import get_live_market_data
-from backend.app.utils.logger import get_logger
+from app.config import DEFAULT_INTERVAL, DEFAULT_PERIOD, MARKET_CACHE_TTL_MINUTES
+from app.data.market_data import get_live_market_data
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

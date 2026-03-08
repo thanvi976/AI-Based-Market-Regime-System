@@ -5,7 +5,7 @@ from typing import Any
 from google import genai
 from google.genai.types import GenerateContentConfig
 
-from backend.app.utils.logger import get_logger
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -4,15 +4,15 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from backend.app.config import DEFAULT_INTERVAL, DEFAULT_PERIOD
-from backend.app.data.market_data import get_live_market_data
-from backend.app.features.feature_engineering import add_market_features, feature_matrix
-from backend.app.models.crash_model import load_crash_model
-from backend.app.models.regime_model import cluster_to_label, load_regime_model
-from backend.app.models.train_model import train_and_persist_models
-from backend.app.services.risk_score import calculate_risk_score
-from backend.app.utils.helpers import to_float
-from backend.app.utils.logger import get_logger
+from app.config import DEFAULT_INTERVAL, DEFAULT_PERIOD
+from app.data.market_data import get_live_market_data
+from app.features.feature_engineering import add_market_features, feature_matrix
+from app.models.crash_model import load_crash_model
+from app.models.regime_model import cluster_to_label, load_regime_model
+from app.models.train_model import train_and_persist_models
+from app.services.risk_score import calculate_risk_score
+from app.utils.helpers import to_float
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -48,7 +48,7 @@ def _get_daily_data() -> pd.DataFrame:
     Falls back to live market data if daily fetch fails.
     """
     try:
-        from backend.app.services.market_cache import get_cached_daily_data, refresh_daily_cache
+        from app.services.market_cache import get_cached_daily_data, refresh_daily_cache
         daily = get_cached_daily_data()
         if daily is not None and not daily.empty:
             return daily

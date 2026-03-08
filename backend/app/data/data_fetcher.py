@@ -6,8 +6,8 @@ import time
 import pandas as pd
 import yfinance as yf
 
-from backend.app.config import FETCH_RETRIES, MARKET_FALLBACK_SYMBOLS
-from backend.app.utils.logger import get_logger
+from app.config import FETCH_RETRIES, MARKET_FALLBACK_SYMBOLS
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 logging.getLogger("yfinance").setLevel(logging.CRITICAL)

@@ -3,8 +3,8 @@ from __future__ import annotations
 import pandas as pd
 from pathlib import Path
 
-from backend.app.models.crash_model import train_crash_model, save_crash_model
-from backend.app.models.regime_model import train_regime_model, save_regime_model
+from app.models.crash_model import train_crash_model, save_crash_model
+from app.models.regime_model import train_regime_model, save_regime_model
 
 DATASET_PATH = Path("dataset/historical_market_data.csv")
 

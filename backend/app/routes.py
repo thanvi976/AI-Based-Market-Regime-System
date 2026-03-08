@@ -3,14 +3,14 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 import pandas as pd
 
-from backend.app.services.risk_score import calculate_risk_score
+from app.services.risk_score import calculate_risk_score
 
 
-from backend.app.services.market_cache import get_cached_data, get_cached_timestamp
-from backend.app.services.prediction_service import generate_market_prediction
-from backend.app.services.signal_engine import generate_signal
-from backend.app.data.data_fetcher import fetch_symbol_data
-from backend.app.utils.logger import get_logger
+from app.services.market_cache import get_cached_data, get_cached_timestamp
+from app.services.prediction_service import generate_market_prediction
+from app.services.signal_engine import generate_signal
+from app.data.data_fetcher import fetch_symbol_data
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()

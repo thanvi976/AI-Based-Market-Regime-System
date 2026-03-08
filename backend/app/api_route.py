@@ -29,8 +29,8 @@ def get_market_data_for_assistant(ticker: str | None = None) -> dict:
 
     if is_indian:
         # ── India market risk ─────────────────────────────────────────────────
-        from backend.app.services.market_cache import get_cached_data
-        from backend.app.services.risk_score import calculate_risk_score
+        from app.services.market_cache import get_cached_data
+        from app.services.risk_score import calculate_risk_score
 
         df = get_cached_data()
         if df is None or df.empty:
@@ -78,8 +78,8 @@ def get_market_data_for_assistant(ticker: str | None = None) -> dict:
 
     else:
         # ── US market risk ────────────────────────────────────────────────────
-        from backend.app.services.market_cache import get_cached_data
-        from backend.app.services.prediction_service import generate_market_prediction
+        from app.services.market_cache import get_cached_data
+        from app.services.prediction_service import generate_market_prediction
 
         df = get_cached_data()
         if df is None or df.empty:
@@ -97,9 +97,9 @@ def get_market_data_for_assistant(ticker: str | None = None) -> dict:
 
 def run_trading_assistant(question: str) -> dict:
     """Detect stock, fetch stock + market data, call Gemini, return response payload."""
-    from backend.app.ticker_mapper import detect_stock_from_question
-    from backend.app.services.stock_service import get_stock_data
-    from backend.app.services.ai_assistant import ask_trading_ai
+    from app.ticker_mapper import detect_stock_from_question
+    from app.services.stock_service import get_stock_data
+    from app.services.ai_assistant import ask_trading_ai
 
     display_name, ticker = detect_stock_from_question(question)
     stock_data_dict = None
@@ -156,6 +156,6 @@ def trading_assistant(request: TradingAssistantRequest):
     try:
         return run_trading_assistant(question)
     except Exception as exc:
-        from backend.app.utils.logger import get_logger
+        from app.utils.logger import get_logger
         get_logger(__name__).exception("trading_assistant failed")
         raise HTTPException(status_code=500, detail=str(exc)) from exc

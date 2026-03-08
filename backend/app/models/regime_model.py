@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 
-from backend.app.config import RANDOM_STATE, REGIME_MODEL_PATH
-from backend.app.features.feature_engineering import feature_matrix
-from backend.app.utils.logger import get_logger
+from app.config import RANDOM_STATE, REGIME_MODEL_PATH
+from app.features.feature_engineering import feature_matrix
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

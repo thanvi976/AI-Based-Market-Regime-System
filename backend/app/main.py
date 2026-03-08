@@ -5,10 +5,10 @@ import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.routes import router as api_router
-from backend.app.api_route import router as ai_router
-from backend.app.services.market_cache import refresh_market_cache
-from backend.app.utils.logger import get_logger
+from app.routes import router as api_router
+from app.api_route import router as ai_router
+from app.services.market_cache import refresh_market_cache
+from app.utils.logger import get_logger
 from dotenv import load_dotenv
 load_dotenv()  # loads .env from project root when you start the app
 

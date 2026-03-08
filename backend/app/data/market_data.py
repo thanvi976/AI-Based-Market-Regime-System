@@ -5,9 +5,9 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import pandas as pd
 
-from backend.app.config import DEFAULT_INTERVAL, DEFAULT_PERIOD, MARKET_SYMBOLS
-from backend.app.data.data_fetcher import fetch_multiple_symbols
-from backend.app.utils.logger import get_logger
+from app.config import DEFAULT_INTERVAL, DEFAULT_PERIOD, MARKET_SYMBOLS
+from app.data.data_fetcher import fetch_multiple_symbols
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

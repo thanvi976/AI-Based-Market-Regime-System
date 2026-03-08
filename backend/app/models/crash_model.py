@@ -4,9 +4,9 @@ import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
-from backend.app.config import CRASH_FORWARD_WINDOW, CRASH_MODEL_PATH, CRASH_THRESHOLD, RANDOM_STATE
-from backend.app.features.feature_engineering import feature_matrix
-from backend.app.utils.logger import get_logger
+from app.config import CRASH_FORWARD_WINDOW, CRASH_MODEL_PATH, CRASH_THRESHOLD, RANDOM_STATE
+from app.features.feature_engineering import feature_matrix
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

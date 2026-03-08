@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from backend.app.utils.helpers import clamp
+from app.utils.helpers import clamp
 
 
 def calculate_risk_score(
