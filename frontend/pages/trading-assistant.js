@@ -248,7 +248,7 @@ export default function TradingAssistantPage() {
           paddingBottom: "1rem",
         }}>
           <KaiCat state={kaiState} />
-          <div className="ta-input-wrap" style={{ flex: 1, ...styles.inputWrap }}>
+          <div className="ta-input-wrap" style={{ flex: 1, minWidth: 0, maxWidth: "100%", ...styles.inputWrap }}>
             <input
               type="text"
               value={question}
@@ -394,6 +394,11 @@ export default function TradingAssistantPage() {
           .ta-grid { grid-template-columns: 1fr !important; }
           .ta-stock-header { flex-direction: column !important; align-items: flex-start !important; }
           .ta-signal-badge { margin-top: 0.5rem !important; }
+        }
+        @media (max-width: 480px) {
+          .ta-input-wrap { flex-direction: row !important; }
+          .ta-input-wrap input { min-width: 0 !important; font-size: 0.85rem !important; }
+          .ta-input-wrap button { padding: 0.875rem 0.85rem !important; font-size: 0.78rem !important; white-space: nowrap !important; flex-shrink: 0 !important; }
         }
       `}} />
     </main>
